@@ -1,0 +1,180 @@
+# Hermes
+
+**Open-source, zero-trust, real-time chat platform.** One native codebase targeting iOS, Android, Windows, macOS, Linux and Web with true native performance.
+
+Hermes is designed to outperform Discord, Stoat and Element in speed, security, reliability and user experience — built on a local-first, end-to-end-encrypted core with post-quantum group messaging.
+
+> Status: **Web4 master spec scaffold** (October 10, 2026). This repository is the production monorepo layout; each service ships with working entrypoints, pinned dependencies and tests.
+
+---
+
+## Why Hermes
+
+| Property | Hermes approach |
+| --- | --- |
+| **Speed** | WebTransport over QUIC/UDP (no TCP head-of-line blocking), `<50ms` p99 client-to-client delivery, 60–120fps scroll. |
+| **Security** | Zero-trust: Double Ratchet DMs + hybrid post-quantum MLS groups (ML-KEM + X25519), Ed25519 message signatures verified locally in `<1ms`, hardware-bound passkeys, JWT `jti` denylists. |
+| **Reliability** | Local-first CRDT sync engine — zero data loss across devices, automatic offline→online merge, strict per-channel sequence numbers with gap-fill on reconnect. |
+| **Privacy** | Zero-knowledge client-side search (SQLite FTS5 over decrypted history). The server never indexes or learns your queries. |
+
+---
+
+## Tech stack (pinned)
+
+| Layer | Technology | Version / standard |
+| --- | --- | --- |
+| Client (all platforms) | Flutter + Dart | 3.47.x / 3.13 |
+| Renderer (desktop/mobile) | Impeller (Metal / Vulkan) | default |
+| Renderer (web) | WebAssembly with WasmGC (`--wasm`) | stable / modern browsers |
+| State & UI | Riverpod | 3.4 |
+| Shared core & crypto engine | Rust via FFI (uniffi) | 2026 edition |
+| Video / audio / screen share | LiveKit (`livekit_client`) | latest |
+| Real-time gateway | Go — quic-go / WebTransport + Redis Pub/Sub | 1.25.x |
+| Local storage & offline cache | Drift (SQLite) + CRDT sync engine | latest |
+| Secure key storage | OS Keychain / Keystore (Secure Enclave / StrongBox / TPM 2.0) | latest |
+| E2EE crypto | Double Ratchet (DMs) + hybrid post-quantum MLS (groups) + Ed25519 | via Rust core & libsodium bindings |
+| Navigation | `go_router` | latest |
+| HTTP client | `dio` with interceptors (auth, retry, logging) | latest |
+| Push notifications | FCM / OneSignal via encrypted proxy | latest |
+| Backend REST API | Go — chi + sqlc + pgx | 1.25.x |
+| Media SFU | LiveKit Server (self-hosted, Go) | latest OSS |
+| Database | PostgreSQL | 17.x |
+| Cache / pub-sub / presence | Redis | 8.x |
+| File storage | MinIO (S3-compatible) or Cloudflare R2 | latest |
+| Monorepo | Turborepo + pnpm 10 | latest |
+| Linting | `dart analyze`, `golangci-lint`, `clippy` | latest |
+| Testing | `flutter_test`, `integration_test`, `go test` | — |
+| CI/CD & containers | GitHub Actions + Docker Compose / Kubernetes | 27.x |
+| Identity & auth | W3C DIDs (`did:key`) + Passkeys (WebAuthn) | — |
+| Password hashing | Argon2id (`golang.org/x/crypto/argon2`) | — |
+| JWT signing | RS256 (asymmetric) via `golang-jwt` | latest |
+
+---
+
+## Architecture at a glance
+
+```
+                        ┌──────────────────────────────┐
+   Flutter client       │        Hermes gateway         │
+  (iOS/Android/Web/     │  WebTransport over QUIC/UDP   │
+   Windows/macOS/Linux) │  per-channel seq + gap-fill   │
+        │               └───────────────▲──────────────┘
+        │ REST / presigned PUT          │ Redis Pub/Sub fanout
+        ▼                               │ server:{id}:channel:{id}
+   ┌──────────────┐    write     ┌──────┴───────┐
+   │  Hermes API  │────────────▶│   PostgreSQL │
+   │ chi+sqlc+pgx │             │      17.x    │
+   └──────┬───────┘             └──────────────┘
+          │ presigned PUT (server never proxies bytes)
+          ▼
+     MinIO / R2 (S3, >5GB multipart)
+
+   Rust crypto core (uniffi → Dart/Kotlin/Swift):
+     Double Ratchet · hybrid PQ-MLS (ML-KEM+X25519) · Ed25519 · CRDT reconcile · FTS5 search
+```
+
+**Two Go services, one Postgres.** `api` owns REST logic, auth and file presigning; `gateway` owns real-time WebTransport streams. They share PostgreSQL via independent connection pools and scale independently. A message posted → API writes to Postgres → publishes to a Redis channel → all gateway instances push to connected WebTransport clients (target `<50ms`).
+
+**Local-first.** Drift/SQLite stores decrypted history with embedded CRDT state, achieving zero data loss across multi-device setups and automatic offline→online merges. Search runs locally via FTS5 — the server never sees your queries.
+
+---
+
+## Repository layout
+
+```
+.
+├── apps/
+│   └── chat/                    # Flutter app (one codebase → all platforms)
+├── core/
+│   └── crypto-engine/           # Rust core: Double Ratchet, MLS, CRDTs, FTS5 search, uniffi bindings
+├── services/
+│   ├── api/                     # Go: REST API (chi + sqlc + pgx)
+│   ├── gateway/                 # Go: WebTransport / QUIC real-time server
+│   └── media/                   # Go: LiveKit wrapper + recording orchestration
+├── packages/
+│   └── shared-schema/           # OpenAPI specs and shared schemas
+├── infra/
+│   ├── docker-compose.yml       # Local dev stack
+│   ├── k8s/                     # Production Kubernetes manifests
+│   └── terraform/               # IaC templates
+├── tooling/                     # CI workflows and scripts
+└── docs/                        # Architecture and self-hosting documentation
+```
+
+---
+
+## Getting started
+
+### Prerequisites
+
+- Flutter 3.47.x (Dart 3.13) with Impeller enabled
+- Rust stable + `uniffi` toolchain (`cargo install uniffi`)
+- Go 1.25.x, Node 20+, pnpm 10
+- Docker (for the local Postgres / Redis / MinIO stack)
+
+### 1. Bring up infrastructure
+
+```bash
+pnpm infra:up          # postgres:17 + redis:8 + minio via docker compose
+```
+
+### 2. Build the Rust crypto core & generate bindings
+
+```bash
+cd core/crypto-engine
+cargo build --release
+uniffi bindgen --library --language dart --out-dir ../../apps/chat/lib/src/generated
+```
+
+### 3. Run the Go services
+
+```bash
+pnpm dev:api           # REST API on :8080
+pnpm dev:gateway       # WebTransport gateway on :443 (UDP) / :8081 (HTTP fallback)
+```
+
+### 4. Run the Flutter app
+
+```bash
+cd apps/chat
+flutter pub get
+flutter run -d chrome --web-renderer html   # or: flutter build web --wasm
+flutter run -d macos                        # desktop (Impeller/Metal)
+```
+
+---
+
+## Performance targets
+
+| Metric | Target |
+| --- | --- |
+| Cold start (mobile) | `< 1.0s` to interactive |
+| Cold start (desktop) | `< 1.5s` to interactive |
+| Message delivery (client→client) | `< 50ms` p99 |
+| Voice latency (glass-to-glass) | `< 150ms` p95 |
+| RAM (mobile idle) | `< 120MB` |
+| RAM (desktop, active chat + voice) | `< 300MB` |
+| Scroll performance | `60fps` minimum, `120fps` on ProMotion |
+
+---
+
+## Security model
+
+- **Hybrid post-quantum MLS** for groups and calls: ML-KEM + X25519 key exchange defends against "harvest now, decrypt later."
+- **Hardware-bound identity**: passwordless WebAuthn / Passkeys backed by Secure Enclave, StrongBox or TPM 2.0 — private keys never leave the device.
+- **Message integrity**: every message is signed with the sender's Ed25519 key; receivers verify locally in `<1ms`.
+- **Token denylists & rate limiting**: RS256 JWTs carry `jti` claims checked against a Redis denylist for instant revocation. Rate limits: 100 msg/min per user, plus per-channel and per-IP caps.
+- **Reproducible builds**: Docker outputs are bit-identical across machines (pinned toolchains + `SOURCE_DATE_EPOCH`).
+
+---
+
+## Documentation
+
+- [Architecture](docs/architecture.md) — data flow, services, crypto core
+- [Security model](docs/security.md) — E2EE, MLS, passkeys, threat model
+- [Self-hosting guide](docs/self-hosting.md) — local dev + production deployment
+- [API reference](packages/shared-schema/openapi.yaml)
+
+## License
+
+MIT (see [LICENSE](LICENSE)).

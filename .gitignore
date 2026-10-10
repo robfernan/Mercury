@@ -1,0 +1,43 @@
+# --- Dart / Flutter ---
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+.idea/
+.vscode/
+pubspec.lock
+
+# --- Rust ---
+target/
+Cargo.lock.bak
+**/*.rs.bk
+
+# --- Go ---
+bin/
+dist/
+*.test
+coverage.out
+
+# --- Bun / JS tooling ---
+node_modules/
+.turbo/
+bun.lock.bak
+
+# --- Env & secrets (never commit) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- Generated bindings / artifacts ---
+apps/chat/lib/src/generated/**
+core/crypto-engine/out/**
+!core/crypto-engine/out/.gitkeep

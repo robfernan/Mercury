@@ -1,0 +1,259 @@
+openapi: 3.1.0
+info:
+  title: Hermes API
+  version: 0.1.0
+  description: >
+    REST API for the Hermes real-time chat platform. Real-time message delivery
+    happens over WebTransport (see gateway); this spec covers auth, channels,
+    messages and zero-knowledge file uploads.
+servers:
+  - url: http://localhost:8080/v1
+security:
+  - bearerAuth: []
+
+tags:
+  - name: auth
+  - name: channels
+  - name: messages
+  - name: files
+
+paths:
+  /auth/passkeys/challenge:
+    post:
+      tags: [auth]
+      summary: Begin a WebAuthn passkey sign-in or registration
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                did: { type: string, description: 'did:key of the user' }
+      responses:
+        '200':
+          description: WebAuthn challenge to present to the platform authenticator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebAuthnChallenge'
+
+  /auth/token:
+    post:
+      tags: [auth]
+      summary: Exchange a verified passkey assertion for an RS256 JWT (with jti)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                did: { type: string }
+                assertion: { type: string, format: byte, description: 'base64 WebAuthn assertion' }
+      responses:
+        '200':
+          description: Issued access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: Revoke the current token by adding its jti to the Redis denylist
+      responses:
+        '204': { description: Token revoked }
+
+  /channels:
+    get:
+      tags: [channels]
+      summary: List channels the user belongs to
+      responses:
+        '200':
+          description: Channel list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Channel' }
+    post:
+      tags: [channels]
+      summary: Create a channel (DM or group)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kind, members]
+              properties:
+                kind: { type: string, enum: [dm, group] }
+                name: { type: string }
+                members:
+                  type: array
+                  items: { type: string, description: 'did:key' }
+      responses:
+        '201':
+          description: Created channel
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Channel' }
+
+  /channels/{channelId}/messages:
+    get:
+      tags: [messages]
+      summary: Fetch messages since a sequence number (gap-fill on reconnect)
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: afterSeq
+          in: query
+          description: Return messages with seq > afterSeq
+          schema: { type: integer, format: int64, default: 0 }
+      responses:
+        '200':
+          description: Ordered message batch
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Message' }
+    post:
+      tags: [messages]
+      summary: Post an encrypted, signed message to a channel
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewMessage'
+      responses:
+        '201':
+          description: Accepted; server assigned seq and fanned out via Redis→gateway
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Message' }
+
+  /files:
+    post:
+      tags: [files]
+      summary: Request a presigned PUT URL (server never proxies bytes)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channelId, filename, contentType, sizeBytes]
+              properties:
+                channelId: { type: string }
+                filename: { type: string }
+                contentType: { type: string }
+                sizeBytes: { type: integer, format: int64 }
+      responses:
+        '201':
+          description: Presigned upload descriptor
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FileUpload' }
+
+  /files/{fileId}/complete:
+    post:
+      tags: [files]
+      summary: Mark an uploaded object complete and attach it to a channel message
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Finalized file record
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/File' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    WebAuthnChallenge:
+      type: object
+      properties:
+        challenge: { type: string, format: byte }
+        rpId: { type: string }
+        userHandle: { type: string }
+        timeoutMs: { type: integer, default: 60000 }
+
+    TokenResponse:
+      type: object
+      properties:
+        accessToken: { type: string }
+        tokenType: { type: string, example: Bearer }
+        expiresInSec: { type: integer, example: 3600 }
+        jti: { type: string }
+
+    Channel:
+      type: object
+      properties:
+        id: { type: string }
+        kind: { type: string, enum: [dm, group] }
+        name: { type: string }
+        members:
+          type: array
+          items: { type: string }
+        lastSeq: { type: integer, format: int64 }
+
+    Message:
+      type: object
+      properties:
+        id: { type: string }
+        channelId: { type: string }
+        seq: { type: integer, format: int64 }
+        senderDid: { type: string }
+        ciphertext: { type: string, format: byte }
+        signature: { type: string, format: byte, description: 'Ed25519 signature over the canonical message' }
+        createdAtMs: { type: integer, format: int64 }
+
+    NewMessage:
+      type: object
+      required: [ciphertext, signature]
+      properties:
+        ciphertext: { type: string, format: byte }
+        signature: { type: string, format: byte }
+        replyToId: { type: string }
+
+    FileUpload:
+      type: object
+      properties:
+        fileId: { type: string }
+        putUrl: { type: string, format: uri }
+        headers:
+          type: object
+          additionalProperties: { type: string }
+        expiresAtMs: { type: integer, format: int64 }
+
+    File:
+      type: object
+      properties:
+        id: { type: string }
+        channelId: { type: string }
+        filename: { type: string }
+        contentType: { type: string }
+        sizeBytes: { type: integer, format: int64 }
+        url: { type: string, format: uri }
