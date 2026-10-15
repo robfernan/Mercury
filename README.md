@@ -1,16 +1,16 @@
-# Hermes
+# Mercury
 
 **Open-source, zero-trust, real-time chat platform.** One native codebase targeting iOS, Android, Windows, macOS, Linux and Web with true native performance.
 
-Hermes is designed to outperform Discord, Stoat and Element in speed, security, reliability and user experience — built on a local-first, end-to-end-encrypted core with post-quantum group messaging.
+Mercury is designed to outperform Discord, Stoat and Element in speed, security, reliability and user experience — built on a local-first, end-to-end-encrypted core with post-quantum group messaging.
 
 > Status: **Web4 master spec scaffold** (October 10, 2026). This repository is the production monorepo layout; each service ships with working entrypoints, pinned dependencies and tests.
 
 ---
 
-## Why Hermes
+## Why Mercury
 
-| Property | Hermes approach |
+| Property | Mercury approach |
 | --- | --- |
 | **Speed** | WebTransport over QUIC/UDP (no TCP head-of-line blocking), `<50ms` p99 client-to-client delivery, 60–120fps scroll. |
 | **Security** | Zero-trust: Double Ratchet DMs + hybrid post-quantum MLS groups (ML-KEM + X25519), Ed25519 message signatures verified locally in `<1ms`, hardware-bound passkeys, JWT `jti` denylists. |
@@ -55,14 +55,14 @@ Hermes is designed to outperform Discord, Stoat and Element in speed, security, 
 
 ```
                         ┌──────────────────────────────┐
-   Flutter client       │        Hermes gateway         │
+   Flutter client       │        Mercury gateway         │
   (iOS/Android/Web/     │  WebTransport over QUIC/UDP   │
    Windows/macOS/Linux) │  per-channel seq + gap-fill   │
         │               └───────────────▲──────────────┘
         │ REST / presigned PUT          │ Redis Pub/Sub fanout
         ▼                               │ server:{id}:channel:{id}
    ┌──────────────┐    write     ┌──────┴───────┐
-   │  Hermes API  │────────────▶│   PostgreSQL │
+   │  Mercury API  │────────────▶│   PostgreSQL │
    │ chi+sqlc+pgx │             │      17.x    │
    └──────┬───────┘             └──────────────┘
           │ presigned PUT (server never proxies bytes)
