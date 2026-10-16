@@ -1,0 +1,43 @@
+name: mercury_chat
+description: "Mercury — open-source, zero-trust, real-time chat client (iOS, Android, Windows, macOS, Linux, Web)."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.13.5
+  flutter: ">=3.47.0 <3.48.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State & navigation
+  flutter_riverpod: ^3.4.3
+  go_router: ^18.1.0
+
+  # Networking (REST). Real-time WebTransport lands via the Rust core / gateway client.
+  dio: ^5.11.1
+
+  # Local-first storage (Drift/SQLite + CRDT state) — not wired up in the UI shell yet.
+  drift: ^2.35.2
+  drift_flutter: ^0.3.1
+
+  # Secure key storage (Keychain / Keystore / DPAPI / libsecret).
+  flutter_secure_storage: ^11.2.0
+
+  # Voice / video / screen share.
+  livekit_client: ^2.13.1
+
+  # Utilities
+  intl: ^0.20.3
+  uuid: ^4.6.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.16.2
+  drift_dev: ^2.35.1
+
+flutter:
+  uses-material-design: true
