@@ -232,6 +232,41 @@ Mercury is transitioning from a traditional client-server layout to a **zero-cos
    - **Multi-Device Fleet AirDrop & Universal Clipboard**: Seamless copy/paste and file sync across Windows, Linux, and Android with Noise-IK cross-signing.
    - **Local Encrypted SQLite FTS5**: Instant offline full-text search with zero network leakage.
 
+### 🔮 Next Frontiers & Strategic Roadmap (2026–2027)
+
+#### 1. Hardware & Neural Engine Integrations
+- [ ] **On-Device Whisper.cpp / DirectML Neural Transcription**:
+  - Run quantized speech-to-text directly on the local NPU / GPU (Intel/AMD/Snapdragon/DirectML).
+  - Voice notes auto-transcribe in real time without a single byte of raw audio leaving the device.
+- [ ] **Ultra-Low Latency AV1 4K Screen Share**:
+  - Hardware-accelerated AV1 encoder support (Nvidia NVENC / Intel QuickSync / AMD AMF) streaming 4K 60fps with stylus annotations overlaid live.
+- [ ] **Spatial Audio & 3D Proximity Sound**:
+  - HRTF binaural rendering for multi-participant voice channels, positioning peers in a 3D acoustic space tailored for audiophile headphones.
+
+#### 2. Decentralized Identity & Social Graph
+- [ ] **Decentralized Identifiers (W3C DID:Key / DID:Peer)**:
+  - Eliminate email and phone number bindings completely; identities are self-certifying cryptographic keypairs with human-readable petnames.
+- [ ] **BLE Proximity Tap-to-Friend**:
+  - Bluetooth Low Energy beaconing for physical meetups: tap devices together to verify safety numbers and establish E2EE direct channels without scanning QR codes.
+- [ ] **Decentralized Reputation & Anti-Spam (Proof-of-Stake / Hashcash)**:
+  - Lightweight PoW or peer endorsements preventing spam and sybil attacks on public channels without CAPTCHAs or phone verification.
+
+#### 3. Storage, File Mesh & Collaborative Workspaces
+- [ ] **Multi-Gigabyte P2P Content Distribution (Blake3 Chunk Trees)**:
+  - Transfer multi-gigabyte files (lossless audio albums, raw Wacom artwork, code repos) across local LAN or STUN direct sockets with resumable chunk-level verification.
+- [ ] **CRDT-Powered Collaborative Notes & Whiteboards (Automerge / Yjs)**:
+  - Conflict-free collaborative markdown documents and infinite canvases synchronized offline-first across your device fleet.
+- [ ] **Encrypted Ephemeral Message Lifespans (Burner Channels)**:
+  - Cryptographically guaranteed self-destructing messages where ephemeral encryption keys are overwritten in local SQLite after viewing.
+
+#### 4. Cross-Platform Desktop & Mobile Experience
+- [ ] **Linux PipeWire & Windows ASIO Low-Latency Audio Drivers**:
+  - Direct kernel streaming eliminating audio buffer delays down to <3ms for pro audio monitoring and live jamming.
+- [ ] **Wacom Radial Menu & Stylus Barrel Key Shortcuts**:
+  - Custom stylus hardware gestures for quick brush swaps, eraser toggles, and screen captures on Windows and Linux.
+- [ ] **Zero-Power Push Notifications (Decentralized UnifiedPush)**:
+  - Replace Google Play Services push notifications with self-hosted or community UnifiedPush relays to protect metadata and battery on Android.
+
 ---
 
 ## Documentation
