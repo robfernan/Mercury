@@ -5,7 +5,7 @@ import '../data/seed_data.dart';
 import 'crypto/crypto_engine.dart';
 import 'crypto/mock_crypto_engine.dart';
 import 'gateway/gateway_client.dart';
-import 'gateway/mock_gateway_client.dart';
+import 'gateway/local_p2p_mesh_gateway.dart';
 
 import 'crypto/native_crypto_engine.dart';
 
@@ -58,20 +58,13 @@ final seedHistoryProvider = Provider<Map<String, List<ChatMessage>>>(
   (ref) => SeedData.messages(DateTime.now()),
 );
 
-/// The real-time gateway. Connects eagerly when first read.
+/// The real-time gateway. Uses real local P2P UDP mesh sync so desktop and mobile
+/// sync messages directly over Wi-Fi without needing any central server.
 final gatewayClientProvider = Provider<GatewayClient>((ref) {
-  final history = ref.watch(seedHistoryProvider);
-  final gateway = MockGatewayClient(
+  final gateway = LocalP2PMeshGatewayClient(
     crypto: ref.watch(cryptoEngineProvider),
     currentUserId: SeedData.currentUserId,
-    servers: SeedData.servers,
-    channels: SeedData.channels,
-    cannedLines: SeedData.cannedLines,
-    activityEnabled: false,
-    initialSeqs: {
-      for (final entry in history.entries)
-        entry.key: entry.value.fold(0, (max, m) => (m.seq ?? 0) > max ? m.seq! : max),
-    },
+    deviceType: 'Mercury Node',
   );
   ref.onDispose(gateway.dispose);
   gateway.connect();
