@@ -531,7 +531,6 @@ class _ReactionChip extends StatelessWidget {
       button: true,
       toggled: mine,
       label: '$emoji reaction, $count',
-      excludeSemantics: true,
       child: Material(
         color: mine ? MercuryColors.accentSoft : MercuryColors.surfaceRaised,
         shape: RoundedRectangleBorder(

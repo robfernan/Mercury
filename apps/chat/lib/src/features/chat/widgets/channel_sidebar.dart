@@ -203,7 +203,6 @@ class _TextChannelTile extends ConsumerWidget {
             label: hasUnread
                 ? '${channel.name}, $unread unread'
                 : 'Channel ${channel.name}',
-            excludeSemantics: true,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
               child: Row(

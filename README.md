@@ -107,10 +107,13 @@ Mercury is designed to outperform Discord, Stoat and Element in speed, security,
 
 ### Prerequisites
 
-- Flutter 3.47.x (Dart 3.13) with Impeller enabled
-- Rust stable + `uniffi` toolchain (`cargo install uniffi`)
-- Go 1.25.x, Node 20+, pnpm 10
-- Docker (for the local Postgres / Redis / MinIO stack)
+- **Flutter 3.47.x** (Dart 3.13) with Impeller enabled
+- **Rust stable** (1.80+) + `cargo`
+- **Go 1.25.x**, **Node 20+**, **pnpm 10**
+- **Docker** (for local Postgres / Redis / MinIO stack)
+- **Windows development** (if running desktop Windows build):
+  - Visual Studio 2022+ with **"Desktop development with C++"** workload installed
+  - **Developer Mode** enabled in Windows Settings (`start ms-settings:developers`) for symlink support
 
 ### 1. Bring up infrastructure
 
@@ -123,7 +126,8 @@ pnpm infra:up          # postgres:17 + redis:8 + minio via docker compose
 ```bash
 cd core/crypto-engine
 cargo build --release
-uniffi bindgen --library --language dart --out-dir ../../apps/chat/lib/src/generated
+# On Windows, copy target/release/hermes_crypto.dll to apps/chat/windows/
+# On macOS/Linux, build libhermes_crypto.dylib or libhermes_crypto.so
 ```
 
 ### 3. Run the Go services
@@ -136,10 +140,18 @@ pnpm dev:gateway       # WebTransport gateway on :443 (UDP) / :8081 (HTTP fallba
 ### 4. Run the Flutter app
 
 ```bash
+# Note: Ensure you run flutter commands from the Flutter app directory
 cd apps/chat
 flutter pub get
-flutter run -d chrome --web-renderer html   # or: flutter build web --wasm
-flutter run -d macos                        # desktop (Impeller/Metal)
+
+# Run on desktop (Windows / macOS / Linux)
+flutter run -d windows
+flutter run -d macos
+flutter run -d linux
+
+# Run on Web (WASM / CanvasKit)
+flutter run -d chrome
+flutter build web --wasm
 ```
 
 ---
