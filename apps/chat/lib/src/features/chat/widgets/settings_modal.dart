@@ -448,6 +448,80 @@ class _SettingsModalState extends ConsumerState<SettingsModal>
                       ),
                       const SizedBox(height: 16),
                       const Text(
+                        'AUDIOPHILE VOICE ENGINE (MOONDROP MIAD01 & HI-FI DACS)',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: MercuryColors.textMuted,
+                          letterSpacing: 0.6,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final audio = ref.watch(audiophileAudioEngineProvider);
+                          return Column(
+                            children: [
+                              for (final preset in AudioQualityPreset.values)
+                                Container(
+                                  margin: const EdgeInsets.only(bottom: 8),
+                                  decoration: BoxDecoration(
+                                    color: audio.currentPreset == preset
+                                        ? MercuryColors.accent.withValues(alpha: 0.12)
+                                        : MercuryColors.surface,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: audio.currentPreset == preset
+                                          ? MercuryColors.accent
+                                          : MercuryColors.border,
+                                    ),
+                                  ),
+                                  child: ListTile(
+                                    leading: Icon(
+                                      preset == AudioQualityPreset.audiophileBitPerfect
+                                          ? Icons.graphic_eq_rounded
+                                          : Icons.music_note_rounded,
+                                      color: audio.currentPreset == preset
+                                          ? MercuryColors.accent
+                                          : MercuryColors.textMuted,
+                                    ),
+                                    title: Text(
+                                      preset.title,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 13.5,
+                                        color: audio.currentPreset == preset
+                                            ? MercuryColors.accent
+                                            : MercuryColors.textPrimary,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      '${preset.description} · ${preset.bitrateKbps}kbps / ${preset.channels == 2 ? "Stereo" : "Mono"} · RTT ${preset.latencyMs}ms',
+                                      style: const TextStyle(fontSize: 11.5, color: MercuryColors.textMuted),
+                                    ),
+                                    trailing: audio.currentPreset == preset
+                                        ? const Icon(Icons.check_circle_rounded, color: MercuryColors.accent)
+                                        : null,
+                                    onTap: () => setState(() => audio.setPreset(preset)),
+                                  ),
+                                ),
+                              SwitchListTile(
+                                contentPadding: EdgeInsets.zero,
+                                activeThumbColor: MercuryColors.accent,
+                                title: const Text('Direct DAC Hardware Bypass (Android & ALSA)'),
+                                subtitle: const Text(
+                                  'Bypasses system resampling mixer directly to dual Cirrus Logic CS43131 DACs via 4.4mm balanced output',
+                                  style: TextStyle(fontSize: 11.5, color: MercuryColors.textMuted),
+                                ),
+                                value: audio.directDacBypassEnabled,
+                                onChanged: (val) => setState(() => audio.toggleDirectDacBypass(val)),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
                         'GATEWAY STREAM',
                         style: TextStyle(
                           fontSize: 12,

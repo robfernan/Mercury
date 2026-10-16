@@ -11,6 +11,7 @@ import 'user_avatar.dart';
 import 'user_status_footer.dart';
 import 'web4_network_modal.dart';
 import 'fleet_sync_modal.dart';
+import 'wacom_canvas_modal.dart';
 
 /// Second column: server header, categorised channels, and the user footer.
 class ChannelSidebar extends ConsumerWidget {
@@ -120,6 +121,19 @@ class _ServerHeader extends StatelessWidget {
             onPressed: () => showDialog<void>(
               context: context,
               builder: (_) => const FleetSyncModal(),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Wacom Live Canvas (Stylus EMR)',
+            icon: const Icon(
+              Icons.draw_rounded,
+              size: 19,
+              color: Color(0xFFE8A33D),
+            ),
+            splashRadius: 18,
+            onPressed: () => showDialog<void>(
+              context: context,
+              builder: (_) => const WacomCanvasModal(),
             ),
           ),
           const SizedBox(width: 4),

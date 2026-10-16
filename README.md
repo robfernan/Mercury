@@ -217,10 +217,20 @@ Mercury is transitioning from a traditional client-server layout to a **zero-cos
 - [x] **Unified Notification & Read-State Ack**: Reading a message on one device clears alerts across all personal devices without duplicate notification noise.
 
 ### Phase 4: Device-Specific & Audiophile Enhancements
-- [ ] **Audiophile Voice Engine (Moondrop MIAD01 & Hi-Fi DACs)**: Full-band lossless Opus stereo (up to 510kbps, 48kHz) bypassing Android audio resampling.
-- [ ] **Wacom MobileStudio Live Canvas**: Real-time collaborative vector drawing channel with stylus pressure sensitivity and sub-20ms stroke rendering.
-- [ ] **Unlimited P2P File Streaming**: Direct peer-to-peer file transfer pipeline supporting multi-gigabyte files with chunk-level SHA-256 verification.
-- [ ] **On-Device Whisper Transcription**: Local neural voice note transcription running on client GPU/NPU.
+- [x] **Audiophile Voice Engine (Moondrop MIAD01 & Hi-Fi DACs)**: Full-band lossless Opus stereo (up to 510kbps, 48kHz) bypassing Android audio resampling.
+- [x] **Wacom MobileStudio Live Canvas**: Real-time collaborative vector drawing channel with stylus pressure sensitivity and sub-20ms stroke rendering.
+- [x] **Unlimited P2P File Streaming**: Direct peer-to-peer file transfer pipeline supporting multi-gigabyte files with chunk-level SHA-256 verification.
+- [x] **On-Device Whisper Transcription**: Local neural voice note transcription running on client GPU/NPU.
+
+### 🚀 Strategic Advantages Over Matrix, Discord, & Signal (October 2026 Web4 Standard)
+1. **Zero-VPS / Serverless Operation**: Unlike Matrix (which requires hosting heavy Synapse / Dendrite homeservers with complex PostgreSQL databases), Mercury operates directly over local mDNS Wi-Fi, STUN P2P, and decentralized store-and-forward relay networks without hosting costs.
+2. **Post-Quantum Security by Default**: Hybrid ML-KEM-768 + X25519 ratchet resists harvest-now-decrypt-later quantum attacks today, while Matrix and Discord still rely primarily on classical ECDH.
+3. **Hardware Enclave Key Isolation**: Private keys are never held in insecure user-space memory; they are bound to TPM 2.0 / Windows Hello, Android StrongBox/TEE, and Linux Secret Service.
+4. **Hardware-Specific Superpowers**:
+   - **Moondrop MIAD01 / Audiophile DACs**: Direct hardware bypass delivering 510kbps bit-perfect full-band Opus stereo over 4.4mm balanced output.
+   - **Wacom MobileStudio Pro**: 8192-level EMR pressure sensitivity on a real-time collaborative vector canvas.
+   - **Multi-Device Fleet AirDrop & Universal Clipboard**: Seamless copy/paste and file sync across Windows, Linux, and Android with Noise-IK cross-signing.
+   - **Local Encrypted SQLite FTS5**: Instant offline full-text search with zero network leakage.
 
 ---
 

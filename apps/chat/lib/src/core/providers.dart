@@ -16,12 +16,16 @@ import 'p2p/decentralized_mailbox.dart';
 import 'p2p/transport_router.dart';
 import 'fleet/fleet_models.dart';
 import 'fleet/fleet_sync_service.dart';
+import 'audio/audiophile_audio_engine.dart';
+import 'canvas/wacom_canvas_service.dart';
 
 export 'p2p/local_lan_discovery.dart';
 export 'p2p/decentralized_mailbox.dart';
 export 'p2p/transport_router.dart';
 export 'fleet/fleet_models.dart';
 export 'fleet/fleet_sync_service.dart';
+export 'audio/audiophile_audio_engine.dart';
+export 'canvas/wacom_canvas_service.dart';
 
 /// The crypto boundary. Uses real native Rust engine if compiled dylib exists,
 /// falling back seamlessly to MockCryptoEngine in dev/headless modes.
@@ -119,4 +123,22 @@ final fleetClipboardStreamProvider = StreamProvider<List<FleetSharedItem>>((ref)
   final fleet = ref.watch(fleetSyncServiceProvider);
   return fleet.clipboardStream;
 });
+
+/// Audiophile sound engine with hardware DAC bypass & high-bitrate Opus stereo
+final audiophileAudioEngineProvider = Provider<AudiophileAudioEngine>((ref) {
+  final engine = AudiophileAudioEngine();
+  ref.onDispose(engine.dispose);
+  return engine;
+});
+
+/// Collaborative vector canvas service with Wacom stylus pressure tracking
+final wacomCanvasServiceProvider = Provider<WacomCanvasService>((ref) {
+  final service = WacomCanvasService(
+    localPeerId: SeedData.currentUserId,
+    localAuthorName: 'Wacom Studio',
+  );
+  ref.onDispose(service.dispose);
+  return service;
+});
+
 
