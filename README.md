@@ -6,6 +6,10 @@ Mercury is designed to outperform Discord, Stoat and Element in speed, security,
 
 > Status: **Web4 master spec scaffold** (October 10, 2026). This repository is the production monorepo layout; each service ships with working entrypoints, pinned dependencies and tests.
 
+<p align="center">
+  <img src="screenshot.png" alt="Mercury Client Shell" width="950" />
+</p>
+
 ---
 
 ## Why Mercury

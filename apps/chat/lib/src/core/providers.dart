@@ -29,6 +29,7 @@ final gatewayClientProvider = Provider<GatewayClient>((ref) {
     servers: SeedData.servers,
     channels: SeedData.channels,
     cannedLines: SeedData.cannedLines,
+    activityEnabled: false,
     initialSeqs: {
       for (final entry in history.entries)
         entry.key: entry.value.fold(0, (max, m) => (m.seq ?? 0) > max ? m.seq! : max),

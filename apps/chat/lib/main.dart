@@ -33,6 +33,9 @@ class MercuryApp extends ConsumerWidget {
         surface: theme.surfaceColor,
       ),
       routerConfig: appRouter,
+      builder: (context, child) => ExcludeSemantics(
+        child: child ?? const SizedBox.shrink(),
+      ),
     );
   }
 }

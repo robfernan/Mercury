@@ -394,8 +394,9 @@ final gatewaySyncProvider = Provider<void>((ref) {
         ref.read(connectionStateProvider.notifier).set(state);
       case MessageReceived():
         onMessage(event);
-      case TypingStarted(:final channelId, :final userId):
-        ref.read(typingProvider.notifier).started(channelId, userId);
+      case TypingStarted():
+        // Disabled mock typing simulation
+        break;
       case PresenceChanged(:final userId, :final presence):
         ref.read(usersProvider.notifier).setPresence(userId, presence);
     }
