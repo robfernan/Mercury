@@ -49,7 +49,18 @@ final defaultChannelForServerProvider = Provider.family<ChatChannel?, String>(
 
 class UsersNotifier extends Notifier<Map<String, ChatUser>> {
   @override
-  Map<String, ChatUser> build() => {for (final u in SeedData.users) u.id: u};
+  Map<String, ChatUser> build() {
+    _loadFromStorage();
+    return {for (final u in SeedData.users) u.id: u};
+  }
+
+  Future<void> _loadFromStorage() async {
+    final repo = ref.read(localStorageRepositoryProvider);
+    final profiles = await repo.loadProfiles();
+    if (profiles.isNotEmpty) {
+      state = {...state, ...profiles};
+    }
+  }
 
   void setPresence(String userId, Presence presence) {
     final user = state[userId];
@@ -64,18 +75,17 @@ class UsersNotifier extends Notifier<Map<String, ChatUser>> {
   }) {
     final user = state[userId];
     if (user == null) return;
-    state = {
-      ...state,
-      userId: ChatUser(
-        id: user.id,
-        displayName: displayName,
-        handle: user.handle,
-        avatarColor: user.avatarColor,
-        presence: user.presence,
-        statusText: statusText,
-        role: user.role,
-      ),
-    };
+    final updated = ChatUser(
+      id: user.id,
+      displayName: displayName,
+      handle: user.handle,
+      avatarColor: user.avatarColor,
+      presence: user.presence,
+      statusText: statusText,
+      role: user.role,
+    );
+    state = {...state, userId: updated};
+    ref.read(localStorageRepositoryProvider).saveProfile(updated);
   }
 }
 
@@ -174,8 +184,19 @@ class MessagesNotifier extends Notifier<List<ChatMessage>> {
   final String channelId;
 
   @override
-  List<ChatMessage> build() =>
-      List.unmodifiable(ref.read(seedHistoryProvider)[channelId] ?? const []);
+  List<ChatMessage> build() {
+    _loadFromDatabase();
+    return List.unmodifiable(ref.read(seedHistoryProvider)[channelId] ?? const []);
+  }
+
+  Future<void> _loadFromDatabase() async {
+    final repo = ref.read(localStorageRepositoryProvider);
+    await repo.seedIfEmpty();
+    final stored = await repo.loadMessagesForChannel(channelId);
+    if (stored.isNotEmpty) {
+      state = List.unmodifiable(stored);
+    }
+  }
 
   /// Encrypts locally, appends an optimistic pending copy, then publishes.
   Future<void> send(
@@ -198,6 +219,7 @@ class MessagesNotifier extends Notifier<List<ChatMessage>> {
       replyToId: replyToId,
     );
     state = List.unmodifiable([...state, pending]);
+    await ref.read(localStorageRepositoryProvider).saveMessage(pending);
 
     try {
       final channel = ref.read(channelByIdProvider(channelId));
@@ -219,13 +241,18 @@ class MessagesNotifier extends Notifier<List<ChatMessage>> {
           );
     } catch (_) {
       if (!ref.mounted) return;
-      _replace(nonce, (m) => m.copyWith(delivery: DeliveryState.failed));
+      _replace(nonce, (m) {
+        final failed = m.copyWith(delivery: DeliveryState.failed);
+        ref.read(localStorageRepositoryProvider).saveMessage(failed);
+        return failed;
+      });
     }
   }
 
   /// Applies a verified, decrypted message from the gateway. If it is the
   /// echo of a pending local message, the pending copy is reconciled in place.
   void applyIncoming(ChatMessage message, {String? clientNonce}) {
+    ref.read(localStorageRepositoryProvider).saveMessage(message);
     if (clientNonce != null && state.any((m) => m.id == clientNonce)) {
       _replace(
         clientNonce,
@@ -252,12 +279,16 @@ class MessagesNotifier extends Notifier<List<ChatMessage>> {
       final users = reactions.putIfAbsent(emoji, () => <String>{});
       if (!users.remove(me)) users.add(me);
       if (users.isEmpty) reactions.remove(emoji);
-      return m.copyWith(reactions: reactions);
+      final updated = m.copyWith(reactions: reactions);
+      ref.read(localStorageRepositoryProvider).saveMessage(updated);
+      return updated;
     });
   }
 
-  void delete(String messageId) =>
-      state = List.unmodifiable(state.where((m) => m.id != messageId));
+  void delete(String messageId) {
+    state = List.unmodifiable(state.where((m) => m.id != messageId));
+    ref.read(localStorageRepositoryProvider).deleteMessage(messageId);
+  }
 
   Future<void> retry(String messageId) async {
     final failed = state.where((m) => m.id == messageId).firstOrNull;

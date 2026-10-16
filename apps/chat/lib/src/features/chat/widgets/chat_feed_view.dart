@@ -8,6 +8,7 @@ import '../../../theme/mercury_theme.dart';
 import '../../../theme/theme_state.dart';
 import '../state/chat_providers.dart';
 import 'message_input_bar.dart';
+import 'message_search_modal.dart';
 import 'message_tile.dart';
 
 class ChatFeedView extends ConsumerStatefulWidget {
@@ -242,6 +243,18 @@ class _ChannelTopBar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.search_rounded, color: MercuryColors.textSecondary),
+            tooltip: 'Search Messages (SQLite FTS5)',
+            onPressed: () => showDialog<void>(
+              context: context,
+              builder: (_) => MessageSearchModal(
+                channelId: channel.id,
+                channelName: channel.name,
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
           IconButton(
             icon: Icon(
               memberListVisible

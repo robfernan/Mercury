@@ -359,6 +359,34 @@ class _SettingsModalState extends ConsumerState<SettingsModal>
                                       fontSize: 15,
                                     ),
                                   ),
+                                  const SizedBox(height: 14),
+                                  const Text(
+                                    'HARDWARE ENCLAVE PROTECTION',
+                                    style: TextStyle(
+                                      color: MercuryColors.textMuted,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.lock_person_rounded, size: 16, color: MercuryColors.success),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        Theme.of(context).platform == TargetPlatform.windows
+                                            ? 'Windows DPAPI / TPM 2.0 Credential Isolation'
+                                            : Theme.of(context).platform == TargetPlatform.android
+                                            ? 'Android Keystore (Hardware StrongBox / TEE)'
+                                            : 'Linux Secret Service (libsecret / Keyring)',
+                                        style: const TextStyle(
+                                          color: MercuryColors.textPrimary,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 12.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ],
                               ),
                             ),

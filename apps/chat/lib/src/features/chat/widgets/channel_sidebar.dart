@@ -9,6 +9,7 @@ import '../../../theme/mercury_theme.dart';
 import '../state/chat_providers.dart';
 import 'user_avatar.dart';
 import 'user_status_footer.dart';
+import 'web4_network_modal.dart';
 
 /// Second column: server header, categorised channels, and the user footer.
 class ChannelSidebar extends ConsumerWidget {
@@ -94,6 +95,20 @@ class _ServerHeader extends StatelessWidget {
               ),
             ),
           ),
+          IconButton(
+            tooltip: 'Web4 P2P & LAN Mesh Network',
+            icon: const Icon(
+              Icons.hub_rounded,
+              size: 19,
+              color: MercuryColors.accent,
+            ),
+            splashRadius: 18,
+            onPressed: () => showDialog<void>(
+              context: context,
+              builder: (_) => const Web4NetworkModal(),
+            ),
+          ),
+          const SizedBox(width: 4),
           const Tooltip(
             message: 'End-to-end encrypted (hybrid PQ-MLS)',
             child: Icon(

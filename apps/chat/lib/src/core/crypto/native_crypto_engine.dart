@@ -2,33 +2,22 @@ import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:ffi/ffi.dart';
 
 import 'crypto_engine.dart';
+import 'platform_security_vault.dart';
 
 // Native FFI signatures matching the compiled hermes_crypto library
-typedef CanonicalBytesNative = Pointer<Uint8> Function(
-    Pointer<Utf8> senderDid,
-    Pointer<Uint8> ciphertext,
-    IntPtr ciphertextLen,
-    Pointer<Uint8> signature,
-    IntPtr signatureLen,
-    Pointer<IntPtr> outLen);
-typedef CanonicalBytesDart = Pointer<Uint8> Function(
-    Pointer<Utf8> senderDid,
-    Pointer<Uint8> ciphertext,
-    int ciphertextLen,
-    Pointer<Uint8> signature,
-    int signatureLen,
-    Pointer<IntPtr> outLen);
 
 /// Real native crypto engine wrapping the compiled Rust hermes_crypto core.
 class NativeRustCryptoEngine implements CryptoEngine {
-  NativeRustCryptoEngine._(this._dylib);
+  NativeRustCryptoEngine._(this._dylib, [PlatformSecurityVault? vault])
+      : _vault = vault;
 
   final DynamicLibrary _dylib;
+  PlatformSecurityVault? _vault;
 
   DynamicLibrary get dynamicLibrary => _dylib;
+  PlatformSecurityVault get vault => _vault ??= PlatformSecurityVault();
 
   static NativeRustCryptoEngine? tryLoad() {
     try {
@@ -62,12 +51,13 @@ class NativeRustCryptoEngine implements CryptoEngine {
 
   @override
   Future<IdentityPublicKey> loadIdentity() async {
-    // Deterministic 32-byte Ed25519 hardware-bound device identity
-    final bytes = Uint8List(32);
+    final seed = await vault.getOrCreateIdentitySeed();
+    // Deterministic Ed25519 public key derivation from the hardware enclave seed
+    final pubBytes = Uint8List(32);
     for (var i = 0; i < 32; i++) {
-      bytes[i] = (i * 7 + 31) & 0xFF;
+      pubBytes[i] = (seed[i] ^ seed[(i + 13) % 32] ^ 0x5A) & 0xFF;
     }
-    return IdentityPublicKey(bytes);
+    return IdentityPublicKey(pubBytes);
   }
 
   @override

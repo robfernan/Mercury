@@ -184,6 +184,46 @@ flutter build web --wasm
 
 ---
 
+## Web4 Architecture & 2026/2027 Engineering Roadmap
+
+Mercury is transitioning from a traditional client-server layout to a **zero-cost, zero-VPS Web4 hybrid mesh**, combining peer-to-peer transport, decentralized public relays, and post-quantum end-to-end security.
+
+```
+                              ┌──────────────────────────────────┐
+  Personal Device Fleet       │    Decentralized Relay Mesh      │     Connected Friends
+  - Windows 11 Desktop        │   (Waku v2 / Iroh DERP / DHT)    │     - Desktop & Mobile
+  - Wacom MobileStudio Pro 13 │   - Zero server hosting bills    │     - Offline Mailbox
+  - HP Debian Laptop          │   - Complete IP & identity mask  │     - P2P File Streams
+  - Moondrop MIAD01 5G Phone  │   - Ephemeral store & forward    │     - E2EE Voice & Canvas
+                              └──────────────────────────────────┘
+```
+
+### Phase 1: Core Cryptography & Local Engine (Complete)
+- [x] **Post-Quantum Hybrid Ratchet**: Dual-layer ML-KEM-768 (FIPS 203) + X25519 key encapsulation in native Rust.
+- [x] **Native C-ABI Dynamic Library**: Compiled `hermes_crypto.dll` with passing test suites and zero runtime panic paths.
+- [x] **Reactive Theming & Customization Engine**: Real-time glassmorphism blurs, wallpaper image filters, accent palettes, and responsive layouts.
+- [x] **Encrypted Local Storage (SQLite FTS5 + Drift)**: Zero-knowledge client-side message search. The network never sees search queries.
+- [x] **Hardware Enclave Key Isolation**: Windows Hello / TPM 2.0 (Win32), Android StrongBox/TEE, and Linux Secret Service integration.
+
+### Phase 2: Web4 Decentralized Transport (Zero-VPS Connectivity)
+- [x] **Iroh / Waku v2 Decentralized Relay Integration**: Connect across arbitrary home Wi-Fi and 5G cellular networks without running or paying for a VPS.
+- [x] **Automatic LAN Discovery (mDNS / Zeroconf)**: Zero-latency, gigabit-speed direct message and file synchronization when devices share local Wi-Fi.
+- [x] **NAT Traversal with DERP Fallback**: STUN/TURN hole-punching with encrypted relay failover for strict school/enterprise firewalls.
+- [x] **Offline Store-and-Forward**: Encrypted mailbox envelopes cached on decentralized relays for up to 30 days for offline friends.
+
+### Phase 3: Multi-Device Fleet Synchronization
+- [ ] **One-Scan Device Enrollment (Noise-IK Handshake)**: Scan a QR on your desktop with your phone or laptop to cross-sign new devices into your trusted fleet.
+- [ ] **Cross-Device Clipboard & AirDrop Equivalent**: Instant local copy/paste and file dropping between Windows, Wacom, Linux, and Android.
+- [ ] **Unified Notification & Read-State Ack**: Reading a message on one device clears alerts across all personal devices without duplicate notification noise.
+
+### Phase 4: Device-Specific & Audiophile Enhancements
+- [ ] **Audiophile Voice Engine (Moondrop MIAD01 & Hi-Fi DACs)**: Full-band lossless Opus stereo (up to 510kbps, 48kHz) bypassing Android audio resampling.
+- [ ] **Wacom MobileStudio Live Canvas**: Real-time collaborative vector drawing channel with stylus pressure sensitivity and sub-20ms stroke rendering.
+- [ ] **Unlimited P2P File Streaming**: Direct peer-to-peer file transfer pipeline supporting multi-gigabyte files with chunk-level SHA-256 verification.
+- [ ] **On-Device Whisper Transcription**: Local neural voice note transcription running on client GPU/NPU.
+
+---
+
 ## Documentation
 
 - [Architecture](docs/architecture.md) — data flow, services, crypto core

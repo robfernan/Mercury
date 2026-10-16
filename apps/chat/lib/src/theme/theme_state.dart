@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/providers.dart';
+
 enum MessageBubbleStyle { modern, compact, brutalist }
 
 class WallpaperConfig {
@@ -76,22 +78,57 @@ class MercuryThemeState {
 
 class MercuryThemeNotifier extends Notifier<MercuryThemeState> {
   @override
-  MercuryThemeState build() => const MercuryThemeState();
+  MercuryThemeState build() {
+    _loadFromStorage();
+    return const MercuryThemeState();
+  }
 
-  void setAccentColor(Color color) => state = state.copyWith(accentColor: color);
+  Future<void> _loadFromStorage() async {
+    final repo = ref.read(localStorageRepositoryProvider);
+    final saved = await repo.loadTheme();
+    if (saved != null) {
+      state = saved;
+    }
+  }
 
-  void setSurfaceColor(Color color) => state = state.copyWith(surfaceColor: color);
+  void _persist() {
+    ref.read(localStorageRepositoryProvider).saveTheme(state);
+  }
 
-  void setBubbleStyle(MessageBubbleStyle style) => state = state.copyWith(bubbleStyle: style);
+  void setAccentColor(Color color) {
+    state = state.copyWith(accentColor: color);
+    _persist();
+  }
 
-  void setTypographyScale(double scale) => state = state.copyWith(typographyScale: scale);
+  void setSurfaceColor(Color color) {
+    state = state.copyWith(surfaceColor: color);
+    _persist();
+  }
 
-  void setGlassmorphismBlur(double blur) => state = state.copyWith(glassmorphismBlur: blur);
+  void setBubbleStyle(MessageBubbleStyle style) {
+    state = state.copyWith(bubbleStyle: style);
+    _persist();
+  }
 
-  void updateWallpaper(WallpaperConfig Function(WallpaperConfig) update) =>
-      state = state.copyWith(wallpaper: update(state.wallpaper));
+  void setTypographyScale(double scale) {
+    state = state.copyWith(typographyScale: scale);
+    _persist();
+  }
 
-  void resetToDefaults() => state = const MercuryThemeState();
+  void setGlassmorphismBlur(double blur) {
+    state = state.copyWith(glassmorphismBlur: blur);
+    _persist();
+  }
+
+  void updateWallpaper(WallpaperConfig Function(WallpaperConfig) update) {
+    state = state.copyWith(wallpaper: update(state.wallpaper));
+    _persist();
+  }
+
+  void resetToDefaults() {
+    state = const MercuryThemeState();
+    _persist();
+  }
 }
 
 final themeStateProvider =
