@@ -267,6 +267,68 @@ Mercury is transitioning from a traditional client-server layout to a **zero-cos
 - [ ] **Zero-Power Push Notifications (Decentralized UnifiedPush)**:
   - Replace Google Play Services push notifications with self-hosted or community UnifiedPush relays to protect metadata and battery on Android.
 
+#### 5. Advanced Privacy, Mesh & Extensibility
+- [ ] **Network Metadata & IP Privacy (Tor / Nym Mixnet Onion Routing)**:
+  - Optional stealth mode routing envelopes through Tor/Nym mixnets, preventing ISP, Wi-Fi admin, or peer surveillance of IP addresses and message timing.
+- [ ] **Zero-Internet Ad-Hoc Mesh Routing (Wi-Fi Direct & BLE Mesh)**:
+  - Hop messages and voice peer-to-peer across phones and laptops during outages, flights, or transit without any router or cellular connection.
+- [ ] **Plausible Deniability & Duress Mode ("Panic Wipe")**:
+  - Decoy PIN loading plausible fake history while quietly purging the real hardware enclave seed, plus sub-5ms memory scrubbing upon hotkey trigger.
+- [ ] **Sandboxed WebAssembly (Wasm) Plugin Engine**:
+  - Zero-trust sandboxed community micro-apps, markdown extensions, soundboards, and mathematical formula renderers running client-side.
+- [ ] **WebRTC SFU-Free Spatial Video & P2P Stream Channels**:
+  - Decentralized multi-peer mesh video calling with dynamic simulcast and AV1 encoding, eliminating video server hosting costs.
+
+---
+
+## Web4 Advanced Infrastructure Roadmap (2027+)
+
+### Phase 6: Deep-Mesh Transport & Zero-Knowledge Network Privacy
+- [ ] **Decentralized Multi-Hop Mixnet Routing (Nym/I2P Integration)**
+  - **Sphinx Packet Formatting**: Encapsulate all WebTransport QUIC datagrams into fixed-size Sphinx cryptographic packets to prevent packet size fingerprinting.
+  - **Variable Cover Traffic Generation**: Inject deterministic, automated dummy traffic bursts from client devices during idle states to obfuscate message timing data from ISPs.
+  - **Cryptographic IP Blinding**: Implement a split-key onion routing handshake layer within the native Rust core, ensuring no peer or relay can map an active network session ID back to a raw IPv4/IPv6 address.
+- [ ] **Ad-Hoc Offline Transport & Local Mesh Sync**
+  - **Native Wi-Fi Aware & BLE Network Formers**: Multi-platform background drivers (using specialized native bindings across Android, iOS, Windows, and Linux) to spin up zero-infrastructure ad-hoc networks.
+  - **Epidemic Routing Sync Engine**: A localized CRDT sync layer that automatically gossips encrypted message envelopes over physical device-to-device hops, maintaining independent sequence trackers without internet access.
+  - **Delayed Mailbox Reconciliation**: A strict gap-fill protocol to merge offline physical mesh history securely back into the primary PostgreSQL global relay mesh via authenticated gatekeepers upon internet reconnect.
+
+### Phase 7: OS/Hardware Sovereignty & Anti-Forensics
+- [ ] **Hardware-Attested Plausible Deniability Vaults**
+  - **Multi-Derivation Cryptographic Seeds**: Derive independent database encryption keys from a single hardware seed based on separate user-input PINs, cleanly separating primary storage blocks from fake decoy layouts.
+  - **Decoy Drift/SQLite Databases**: Instantiate a secondary, plausible cleartext SQLite database instance to load dummy profile data, fake contacts, and synthetic conversation trees if a secondary PIN is entered.
+  - **Zero-Footprint Volatile Memory Sanitization**: Low-level Rust hooks tied to OS lock signals, physical disconnect events, or hotkey combinations that execute zeroing loops (`volatile_set_memory`) across active RAM-cached keys in under 5ms.
+- [ ] **Hardware Enclave Isolation Expansion**
+  - **Ephemeral Session Isolation**: Bind short-lived session keys directly to the host platform's secure coprocessor (Apple Secure Enclave, Android StrongBox, Windows TPM 2.0) to block memory-scraping rootkits.
+  - **Biometric Compulsion Protection**: Implement an automated dead-man switch or an isolated lockout feature that permanently drops primary keys from system memory if biometrics are forced under duress.
+
+### Phase 8: Zero-Knowledge Extensibility & Sandboxed Ecosystem
+- [ ] **Local WebAssembly (Wasm) Plugin Engine**
+  - **Isolated Guest VM Runtime**: Integrate an embedded, resource-capped WebAssembly instance (`wasmer` or `wasmtime`) directly into the Rust crypto engine core.
+  - **Strict Capability-Based Security (WASI)**: Deny all plugins direct access to system files, memory boundaries, or raw socket networks unless explicitly signed off via granular, user-controlled runtime permission lists.
+  - **Zero-Knowledge UI Component Interfacing**: Provide a secure C-ABI bridging layer that lets Wasm plugins safely pass layout instructions (like custom markdown renderers or LaTeX expressions) to the Flutter engine without ever reading channel message cleartext.
+- [ ] **Extensible Decentralized Bots & Client-Side Integrations**
+  - **Client-Side Webhook Translators**: Move traditional cloud bot processing locally onto client devices, executing automated actions over decrypted message streams without sharing master channel keys with third-party servers.
+
+### Phase 9: Decentralized Media Engineering & Multi-Party Streams
+- [ ] **SFU-Free Decentralized P2P Mesh Video**
+  - **Dynamic Simulcast P2P Topologies**: Implement a full mesh audio/video connection topology where client devices adaptively split, multiplex, and stream separate bitrates down individual peer pipelines based on real-time uplink metrics.
+  - **Hardware-Accelerated AV1 Encoding/Decoding**: Hook the WebRTC client engine directly into native platform media codecs, optimizing for the efficient AV1 compression standard to cut multi-user mesh data transfer overhead by 40%.
+  - **Spatial Audio P2P Node Graphing**: A client-side audio rendering pipeline to position voice data accurately in a 3D audio space based on UI positioning, without running a heavy server processing unit.
+
+---
+
+## Comprehensive Comparative Positioning
+
+| Capability Vector | **Mercury (Target Architecture)** | **Discord** | **Element / Matrix** | **Signal** |
+| :--- | :--- | :--- | :--- | :--- |
+| **Server Footprint & Hosting** | Zero-VPS Web4 Hybrid Mesh / Self-Hosted Go | Heavy Centralized Cloud | Heavy Federated Servers | Centralized Signal Cloud |
+| **Network & Metadata Anonymity** | Onion Mixnet Routing (Sphinx + Cover Traffic) | None (Harvested) | Vulnerable (Server Admins see IDs) | Minimal (Sealed Sender, no IP mask) |
+| **Offline Transport** | Ad-Hoc Wi-Fi Direct & BLE Epidemic CRDT Mesh | None | None | None |
+| **Physical Device Defense** | Plausible Deniability Vaults + TPM Key Isolation | None | Basic Local Encryption | Local Pin / Profile Locking |
+| **Extensibility Model** | Zero-Trust Sandboxed Wasm Local Plugins | Central Cloud Bots (Reads Data) | Iframe-based Widgets | No Plugins / Fixed Shell |
+| **Group Audio/Video Calls** | SFU-Free Decentralized AV1 P2P Mesh | Centralized Media SFU | Expensive Central Media SFU | Centralized Group Call Servers |
+
 ---
 
 ## Documentation
