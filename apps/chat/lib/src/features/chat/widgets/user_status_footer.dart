@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/crypto/crypto_engine.dart';
-import '../../../core/gateway/gateway_client.dart';
-import '../../../core/providers.dart';
 import '../../../theme/mercury_theme.dart';
 import '../state/chat_providers.dart';
+import 'settings_modal.dart';
 import 'user_avatar.dart';
 
 /// Bottom of the channel sidebar: voice connection banner + local user
@@ -90,11 +88,11 @@ class UserStatusFooter extends ConsumerWidget {
                   onPressed: voiceNotifier.toggleDeafen,
                 ),
                 _FooterButton(
-                  tooltip: 'Security & diagnostics',
+                  tooltip: 'Settings & Customization',
                   icon: Icons.settings_rounded,
                   onPressed: () => showDialog<void>(
                     context: context,
-                    builder: (_) => const _DiagnosticsDialog(),
+                    builder: (_) => const SettingsModal(),
                   ),
                 ),
               ],
@@ -187,108 +185,4 @@ class _FooterButton extends StatelessWidget {
   }
 }
 
-/// Shows which engines are active so nobody mistakes a mock build for a
-/// secure one.
-class _DiagnosticsDialog extends ConsumerWidget {
-  const _DiagnosticsDialog();
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final crypto = ref.watch(cryptoEngineProvider);
-    final gateway = ref.watch(gatewayClientProvider);
-    final connection = ref.watch(connectionStateProvider);
-
-    return AlertDialog(
-      backgroundColor: MercuryColors.surfaceRaised,
-      surfaceTintColor: Colors.transparent,
-      title: const Text('Security & diagnostics'),
-      content: SizedBox(
-        width: 420,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (!crypto.isSecure)
-              Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: MercuryColors.warning.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: MercuryColors.warning.withValues(alpha: 0.4),
-                  ),
-                ),
-                child: const Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.warning_amber_rounded,
-                        color: MercuryColors.warning, size: 20),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Development build: messages use a mock cipher and are '
-                        'NOT end-to-end encrypted.',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            _Row('Crypto engine', crypto.displayName),
-            FutureBuilder<IdentityPublicKey>(
-              future: crypto.loadIdentity(),
-              builder: (context, snap) =>
-                  _Row('Identity fingerprint', snap.data?.fingerprint ?? '…'),
-            ),
-            _Row('Gateway', gateway.runtimeType.toString()),
-            _Row('Connection', switch (connection) {
-              GatewayConnectionState.connected => 'Connected',
-              GatewayConnectionState.connecting => 'Connecting…',
-              GatewayConnectionState.reconnecting => 'Reconnecting…',
-              GatewayConnectionState.disconnected => 'Disconnected',
-            }),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Close'),
-        ),
-      ],
-    );
-  }
-}
-
-class _Row extends StatelessWidget {
-  const _Row(this.label, this.value);
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 150,
-            child: Text(
-              label,
-              style: const TextStyle(color: MercuryColors.textMuted),
-            ),
-          ),
-          Expanded(
-            child: SelectableText(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

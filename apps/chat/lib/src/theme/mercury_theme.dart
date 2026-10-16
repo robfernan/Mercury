@@ -26,13 +26,16 @@ abstract final class MercuryColors {
 }
 
 abstract final class MercuryTheme {
-  static ThemeData dark() {
+  static ThemeData dark({Color? accent, Color? surface}) {
+    final effectiveAccent = accent ?? MercuryColors.accent;
+    final effectiveSurface = surface ?? MercuryColors.surface;
+
     final scheme = ColorScheme.fromSeed(
-      seedColor: MercuryColors.accent,
+      seedColor: effectiveAccent,
       brightness: Brightness.dark,
     ).copyWith(
-      primary: MercuryColors.accent,
-      surface: MercuryColors.surface,
+      primary: effectiveAccent,
+      surface: effectiveSurface,
       onSurface: MercuryColors.textPrimary,
       error: MercuryColors.danger,
       outlineVariant: MercuryColors.border,
@@ -41,14 +44,26 @@ abstract final class MercuryTheme {
     final base = ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      scaffoldBackgroundColor: MercuryColors.surface,
+      scaffoldBackgroundColor: effectiveSurface,
       visualDensity: VisualDensity.standard,
     );
+
+    const fontFallbacks = [
+      'Segoe UI Emoji',
+      'Apple Color Emoji',
+      'Noto Color Emoji',
+      'Segoe UI',
+      'Roboto',
+      'Helvetica Neue',
+      'Arial',
+      'sans-serif',
+    ];
 
     return base.copyWith(
       textTheme: base.textTheme.apply(
         bodyColor: MercuryColors.textPrimary,
         displayColor: MercuryColors.textPrimary,
+        fontFamilyFallback: fontFallbacks,
       ),
       dividerTheme: const DividerThemeData(
         color: MercuryColors.border,

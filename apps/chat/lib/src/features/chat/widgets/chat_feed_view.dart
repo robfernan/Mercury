@@ -1,8 +1,11 @@
+import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models.dart';
 import '../../../theme/mercury_theme.dart';
+import '../../../theme/theme_state.dart';
 import '../state/chat_providers.dart';
 import 'message_input_bar.dart';
 import 'message_tile.dart';
@@ -54,19 +57,53 @@ class _ChatFeedViewState extends ConsumerState<ChatFeedView> {
       }
     });
 
-    return Container(
-      color: MercuryColors.surface,
-      child: Column(
-        children: [
-          // Channel Top Bar
-          _ChannelTopBar(
-            server: widget.server,
-            channel: widget.channel,
-            onOpenDrawer: widget.onOpenDrawer,
-            memberListVisible: memberListVisible,
-            onToggleMemberList: () =>
-                ref.read(memberListVisibleProvider.notifier).toggle(),
+    final theme = ref.watch(themeStateProvider);
+    final wallpaper = theme.wallpaper;
+
+    return Stack(
+      children: [
+        // Background Wallpaper Layer
+        if (wallpaper.imagePath != null && File(wallpaper.imagePath!).existsSync())
+          Positioned.fill(
+            child: Opacity(
+              opacity: wallpaper.opacity,
+              child: ImageFiltered(
+                imageFilter: ImageFilter.blur(
+                  sigmaX: wallpaper.blur,
+                  sigmaY: wallpaper.blur,
+                ),
+                child: Image.file(
+                  File(wallpaper.imagePath!),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          )
+        else
+          Positioned.fill(
+            child: Container(color: theme.surfaceColor),
           ),
+
+        // Semi-transparent backdrop tint if wallpaper is active
+        if (wallpaper.imagePath != null)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withValues(alpha: 0.55),
+            ),
+          ),
+
+        // Foreground Chat UI
+        Column(
+          children: [
+            // Channel Top Bar
+            _ChannelTopBar(
+              server: widget.server,
+              channel: widget.channel,
+              onOpenDrawer: widget.onOpenDrawer,
+              memberListVisible: memberListVisible,
+              onToggleMemberList: () =>
+                  ref.read(memberListVisibleProvider.notifier).toggle(),
+            ),
           // Messages ListView
           Expanded(
             child: messages.isEmpty
@@ -100,8 +137,9 @@ class _ChatFeedViewState extends ConsumerState<ChatFeedView> {
           ),
         ],
       ),
-    );
-  }
+    ],
+  );
+}
 }
 
 class _ChannelTopBar extends StatelessWidget {

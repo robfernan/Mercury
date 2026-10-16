@@ -7,10 +7,12 @@ import 'crypto/mock_crypto_engine.dart';
 import 'gateway/gateway_client.dart';
 import 'gateway/mock_gateway_client.dart';
 
-/// The crypto boundary. Override with the uniffi-backed engine once the Rust
-/// core bindings are generated into `lib/src/generated/`.
+import 'crypto/native_crypto_engine.dart';
+
+/// The crypto boundary. Uses real native Rust engine if compiled dylib exists,
+/// falling back seamlessly to MockCryptoEngine in dev/headless modes.
 final cryptoEngineProvider = Provider<CryptoEngine>(
-  (ref) => MockCryptoEngine(),
+  (ref) => NativeRustCryptoEngine.tryLoad() ?? MockCryptoEngine(),
 );
 
 /// Decrypted local history. Stand-in for the Drift/SQLite store.

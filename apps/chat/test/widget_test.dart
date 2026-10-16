@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mercury_chat/main.dart';
 import 'package:mercury_chat/src/core/crypto/mock_crypto_engine.dart';
-import 'package:mercury_chat/src/core/gateway/gateway_client.dart';
 import 'package:mercury_chat/src/core/gateway/mock_gateway_client.dart';
 import 'package:mercury_chat/src/core/providers.dart';
 import 'package:mercury_chat/src/data/seed_data.dart';

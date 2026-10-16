@@ -56,6 +56,27 @@ class UsersNotifier extends Notifier<Map<String, ChatUser>> {
     if (user == null || user.presence == presence) return;
     state = {...state, userId: user.copyWith(presence: presence)};
   }
+
+  void setProfile({
+    required String userId,
+    required String displayName,
+    String? statusText,
+  }) {
+    final user = state[userId];
+    if (user == null) return;
+    state = {
+      ...state,
+      userId: ChatUser(
+        id: user.id,
+        displayName: displayName,
+        handle: user.handle,
+        avatarColor: user.avatarColor,
+        presence: user.presence,
+        statusText: statusText,
+        role: user.role,
+      ),
+    };
+  }
 }
 
 final usersProvider = NotifierProvider<UsersNotifier, Map<String, ChatUser>>(
