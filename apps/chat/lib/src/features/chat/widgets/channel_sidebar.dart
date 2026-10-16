@@ -10,6 +10,7 @@ import '../state/chat_providers.dart';
 import 'user_avatar.dart';
 import 'user_status_footer.dart';
 import 'web4_network_modal.dart';
+import 'fleet_sync_modal.dart';
 
 /// Second column: server header, categorised channels, and the user footer.
 class ChannelSidebar extends ConsumerWidget {
@@ -106,6 +107,19 @@ class _ServerHeader extends StatelessWidget {
             onPressed: () => showDialog<void>(
               context: context,
               builder: (_) => const Web4NetworkModal(),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Multi-Device Fleet & AirDrop',
+            icon: const Icon(
+              Icons.devices_rounded,
+              size: 19,
+              color: Color(0xFF3FA7D6),
+            ),
+            splashRadius: 18,
+            onPressed: () => showDialog<void>(
+              context: context,
+              builder: (_) => const FleetSyncModal(),
             ),
           ),
           const SizedBox(width: 4),

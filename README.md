@@ -212,9 +212,9 @@ Mercury is transitioning from a traditional client-server layout to a **zero-cos
 - [x] **Offline Store-and-Forward**: Encrypted mailbox envelopes cached on decentralized relays for up to 30 days for offline friends.
 
 ### Phase 3: Multi-Device Fleet Synchronization
-- [ ] **One-Scan Device Enrollment (Noise-IK Handshake)**: Scan a QR on your desktop with your phone or laptop to cross-sign new devices into your trusted fleet.
-- [ ] **Cross-Device Clipboard & AirDrop Equivalent**: Instant local copy/paste and file dropping between Windows, Wacom, Linux, and Android.
-- [ ] **Unified Notification & Read-State Ack**: Reading a message on one device clears alerts across all personal devices without duplicate notification noise.
+- [x] **One-Scan Device Enrollment (Noise-IK Handshake)**: Scan a QR on your desktop with your phone or laptop to cross-sign new devices into your trusted fleet.
+- [x] **Cross-Device Clipboard & AirDrop Equivalent**: Instant local copy/paste and file dropping between Windows, Wacom, Linux, and Android.
+- [x] **Unified Notification & Read-State Ack**: Reading a message on one device clears alerts across all personal devices without duplicate notification noise.
 
 ### Phase 4: Device-Specific & Audiophile Enhancements
 - [ ] **Audiophile Voice Engine (Moondrop MIAD01 & Hi-Fi DACs)**: Full-band lossless Opus stereo (up to 510kbps, 48kHz) bypassing Android audio resampling.

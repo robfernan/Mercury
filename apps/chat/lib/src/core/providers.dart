@@ -14,10 +14,14 @@ import '../data/local/local_storage_repository.dart';
 import 'p2p/local_lan_discovery.dart';
 import 'p2p/decentralized_mailbox.dart';
 import 'p2p/transport_router.dart';
+import 'fleet/fleet_models.dart';
+import 'fleet/fleet_sync_service.dart';
 
 export 'p2p/local_lan_discovery.dart';
 export 'p2p/decentralized_mailbox.dart';
 export 'p2p/transport_router.dart';
+export 'fleet/fleet_models.dart';
+export 'fleet/fleet_sync_service.dart';
 
 /// The crypto boundary. Uses real native Rust engine if compiled dylib exists,
 /// falling back seamlessly to MockCryptoEngine in dev/headless modes.
@@ -93,3 +97,26 @@ final transportRouterProvider = Provider<Web4TransportRouter>((ref) {
   ref.onDispose(router.dispose);
   return router;
 });
+
+/// Multi-device fleet synchronization service
+final fleetSyncServiceProvider = Provider<FleetSyncService>((ref) {
+  final service = FleetSyncService(
+    currentDeviceId: 'dev_win11_desktop',
+    currentDeviceName: 'Windows 11 Workstation',
+  );
+  ref.onDispose(service.dispose);
+  return service;
+});
+
+/// Stream of enrolled fleet devices
+final fleetDevicesStreamProvider = StreamProvider<List<FleetDevice>>((ref) {
+  final fleet = ref.watch(fleetSyncServiceProvider);
+  return fleet.devicesStream;
+});
+
+/// Stream of universal cross-device clipboard items
+final fleetClipboardStreamProvider = StreamProvider<List<FleetSharedItem>>((ref) {
+  final fleet = ref.watch(fleetSyncServiceProvider);
+  return fleet.clipboardStream;
+});
+
