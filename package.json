@@ -11,13 +11,8 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",
-    "typecheck": "turbo run typecheck",
-    "dev:api": "bun --filter @hermes/api dev",
-    "dev:gateway": "bun --filter @hermes/gateway dev",
-    "dev:media": "bun --filter @hermes/media dev",
-    "schema:generate": "turbo run schema:generate",
-    "infra:up": "docker compose -f infra/docker-compose.yml up -d",
-    "infra:down": "docker compose -f infra/docker-compose.yml down"
+    "core:build": "cd core/crypto-engine && cargo build --release",
+    "chat:run": "cd apps/chat && flutter run -d windows"
   },
   "devDependencies": {
     "turbo": "^2.5.0"

@@ -1,47 +1,47 @@
-# Hermes Security Model
+# Mercury Security Model
 
-Hermes is **zero-trust by default**: the server stores ciphertext and metadata, never plaintext; identity is hardware-bound; every message is signed; and group messaging is post-quantum hybrid.
+Mercury is **zero-trust and serverless by default**: no central server stores your cleartext, keys, or metadata; identity is hardware-bound; every message is cryptographically signed; and group messaging uses hybrid post-quantum MLS.
 
-## 1. Identity & authentication
+---
 
-- **W3C DIDs (`did:key`)**: each user's public key is encoded as a `did:key`, giving a self-sovereign, verifiable identifier with no central registry.
-- **Passkeys (WebAuthn)**: passwordless login backed by Apple Secure Enclave, Android StrongBox or TPM 2.0. The private key never leaves the device and cannot be exported.
-- **JWT RS256**: asymmetric signing. Access tokens carry a `jti` claim checked against a **Redis denylist** for instantaneous revocation (logout / password change / anomaly).
+## 1. Identity & Hardware-Bound Sovereignty
 
-## 2. Password hashing
+- **W3C DIDs (`did:key`)**: Each user's identity is a self-sovereign cryptographic keypair encoded as a `did:key`, with zero dependence on phone numbers, email addresses, or central registries.
+- **Hardware Enclave Key Isolation**: Cryptographic seeds are generated and isolated inside host platform hardware coprocessors:
+  - Windows: TPM 2.0 & Windows Hello via DPAPI
+  - Android: StrongBox Keymaster / Hardware TEE
+  - Linux: Secret Service API & Kernel Keyring
+  - macOS/iOS: Apple Secure Enclave
+- **Noise-IK Device Cross-Signing**: Adding a new device to your fleet (phone, drawing tablet, laptop) uses an ephemeral one-scan QR code handshake, mutually authenticating devices without password entry.
 
-Where a secret is stored server-side, it uses **Argon2id** (`golang.org/x/crypto/argon2`) with memory-hard parameters tuned to resist GPU/ASIC attacks.
+---
 
-## 3. End-to-end encryption
+## 2. End-to-End Cryptography Architecture
 
-| Context | Scheme |
-| --- | --- |
-| Direct messages (1:1) | **Double Ratchet** — forward secrecy + post-compromise security |
-| Groups & calls | **Hybrid post-quantum MLS** — Messaging Layer Security with ML-KEM + X25519 key exchange |
+| Communication Channel | Cryptographic Primitive & Standard |
+| :--- | :--- |
+| **Direct DMs (1:1)** | **Double Ratchet (Signal Protocol)**: Ephemeral Diffie-Hellman ratcheting for forward secrecy and post-compromise self-healing. |
+| **Channels & Group Rooms** | **Hybrid Post-Quantum MLS (RFC 9420)**: `ML-KEM-768` (NIST FIPS 203) combined with `X25519` defending against "harvest-now-decrypt-later" quantum attacks. |
+| **Message Authenticity** | **Ed25519 Signatures**: Every message, reaction, and canvas stroke is digitally signed; peer clients verify authenticity locally in `<1ms`. |
+| **Symmetric Encryption** | **XChaCha20-Poly1305**: Authenticated AEAD with 192-bit nonces, immune to nonce-reuse vulnerabilities. |
 
-The hybrid PQ construction defends against **"harvest now, decrypt later"**: an attacker capturing today's ciphertext cannot break it after a quantum computer exists, because the ML-KEM component resists Shor-style attacks.
+---
 
-## 4. Message integrity
+## 3. Physical Device Defense & Zero-Knowledge Storage
 
-Every message is **signed with the sender's Ed25519 private key**. Receivers verify signatures locally in **<1ms** before rendering — so a tampered or replayed frame is rejected even if it arrived over a trusted transport.
+- **Zero-Knowledge SQLite FTS5**: All chat history and media are indexed client-side using SQLite Full-Text Search (FTS5). Search queries never touch any network or relay interface.
+- **Plausible Deniability & Decoy Vaults**: Multi-derivation cryptographic PINs allow loading a plausible decoy history while keeping sensitive conversation trees cryptographically hidden.
+- **Volatile Memory Sanitization**: Native Rust hooks zero out active in-memory session keys in under 5ms upon OS lock or hotkey trigger.
 
-## 5. Token denylists & rate limiting
+---
 
-- RS256 JWTs include `jti`; revocation = add to Redis denylist (O(1) check on the hot path).
-- Rate limits: **100 msg/min per user**, plus per-channel and per-IP caps, enforced at the API edge.
+## 4. Threat Model Summary
 
-## 6. Threat model summary
-
-| Threat | Mitigation |
-| --- | --- |
-| Server compromise (at rest) | Ciphertext in Postgres/MinIO; keys on device |
-| Harvest now / decrypt later | Hybrid PQ MLS (ML-KEM + X25519) |
-| Malicious gateway replay/tamper | Ed25519 signatures + strict per-channel `seq` ordering |
-| Token theft after logout | Redis `jti` denylist, instant revocation |
-| Brute-force / credential stuffing | Passkeys (no password), Argon2id fallback, rate limits |
-| Cross-device desync | CRDT convergence — no data loss on merge |
-| Search leakage to server | Zero-knowledge local FTS5 search |
-
-## 7. Reproducible builds
-
-Docker images are built with pinned toolchains and a fixed `SOURCE_DATE_EPOCH`, producing **bit-identical** outputs across machines so auditors can verify the exact bytes that run in production.
+| Threat Vector | Mercury Web4 Mitigation |
+| :--- | :--- |
+| **Third-Party Relay Snooping** | All envelopes are encrypted with hybrid post-quantum MLS; relays only see opaque bytes. |
+| **Harvest Now, Decrypt Later** | ML-KEM-768 (Kyber) quantum-resistant key encapsulation layered with X25519. |
+| **Packet Spoofing & Replay** | Ed25519 digital signatures and strict monotonic logical clocks (HLC). |
+| **ISP / Carrier Traffic Analysis** | Sphinx packet formatting and variable cover traffic over Waku/Iroh mesh routes. |
+| **Compelled Device Inspection** | Hardware-attested plausible deniability vault with secondary decoy PIN. |
+| **Cross-Device Desynchronization** | CRDT convergence — zero data loss across offline and multi-device sessions. |

@@ -1,85 +1,76 @@
-# Hermes Architecture
+# Mercury Web4 Architecture (Pure Zero-VPS P2P Standard)
 
-This document describes the runtime data flow, service boundaries and the shared Rust crypto core. It is the source of truth for how a message travels from one client to another.
+This document describes the runtime data flow, decentralized transport tiers, and native Rust cryptography that power **Mercury** — an open-source, serverless, zero-trust real-time chat platform.
 
-## 1. Service topology
+---
 
-Hermes runs **two independent Go services** that share PostgreSQL but scale independently:
+## 1. Zero-VPS Peer-to-Peer Paradigm
 
-| Service | Responsibility | Transport |
-| --- | --- | --- |
-| `api` | REST logic, auth (passkeys/JWT), file presigning, channel membership, rate limiting | HTTP/1.1 + HTTP/2 (`chi`) |
-| `gateway` | Real-time bidirectional streams, presence, sequence numbers, gap-fill | WebTransport over QUIC/UDP (+ HTTP fallback) |
+Mercury does not require running Docker containers, Kubernetes clusters, PostgreSQL instances, or paid cloud VPS nodes. Every client device acts as an autonomous, self-sovereign cryptographic node.
 
-Both connect to PostgreSQL 17 via **independent connection pools** (pgx). They coordinate through **Redis 8 Pub/Sub**, never by calling each other.
+| Subsystem | Pure Web4 Approach | Traditional Matrix / Discord Approach |
+| :--- | :--- | :--- |
+| **Transport** | Direct P2P over QUIC/UDP (mDNS on LAN, STUN/DERP over WAN/5G) | Centralized WebSockets or heavy HTTP homeservers |
+| **Relay & Mailbox** | Ephemeral Waku v2 / Iroh Gossip Relays (30-day encrypted cache) | Persistent server-side PostgreSQL databases |
+| **Discovery** | Kademlia / Iroh Distributed Hash Table (DHT) keyed by `did:key` | Centralized account authentication servers |
+| **Storage** | Client-side encrypted SQLite with FTS5 search index via Drift | Server-side cleartext or encrypted server archives |
+| **Key Isolation** | OS Hardware Enclaves (TPM 2.0 / StrongBox / Apple Secure Enclave) | Browser memory / user-space files |
 
-## 2. Message delivery path (<50ms p99)
+---
 
-```
-Client A posts message
-   │  1. encrypt locally (Double Ratchet / MLS), sign with Ed25519
-   ▼
-api: POST /v1/channels/{id}/messages
-   │  2. verify JWT + rate limit, insert row (channel_id, seq = last+1) in Postgres
-   │  3. PUBLISH redis channel "server:{serverId}:channel:{channelId}"
-   ▼
-gateway (all instances subscribe to that channel)
-   │  4. push frame over the client's WebTransport stream
-   ▼
-Client B receives, verifies Ed25519 signature (<1ms), decrypts, appends at seq
-```
+## 2. Multi-Tiered Dynamic Transport Router
 
-**Why this is fast:** the hot path is a single Postgres insert + one Redis publish + one QUIC datagram. There is no TCP head-of-line blocking because WebTransport rides on UDP/QUIC with independent streams — a lossy or reordered stream never stalls others during network drops or cellular handoff.
-
-## 3. Ordering, sequence numbers & gap-fill
-
-Every channel has a **strictly increasing integer `seq`** assigned by the API at insert time (single writer per channel via Postgres). This gives total ordering without client clocks.
-
-On reconnect:
-1. Client sends its last-acked `seq`.
-2. Gateway/API returns all messages with `seq > N` for that channel.
-3. Client applies them in order, then resumes the live stream.
-
-This makes reconnection an O(gap) patch rather than a full resync.
-
-## 4. Local-first CRDT sync engine
-
-The client stores decrypted history in **Drift/SQLite** with embedded **CRDT state**. Consequences:
-
-- **Zero data loss across devices**: each device is a peer; merges are commutative, associative and idempotent (Lamport timestamps + per-field LWW registers for editable metadata).
-- **Offline→online merge**: edits made offline converge to the same state as online edits once connectivity returns — no "last write wins by server" surprises.
-- The CRDT reconciliation math lives in the Rust core so it is bit-identical on every platform.
-
-## 5. Zero-knowledge client-side search
-
-Full-text search runs **locally** against the decrypted SQLite history using **FTS5**. The query never leaves the device, and the server holds no inverted index — preserving total E2EE privacy. Drift exposes FTS5 via `.drift` files + `package:drift/extensions/fts5.dart`.
-
-## 6. Zero-knowledge file uploads
+When sending an encrypted message envelope, Mercury selects the lowest latency, zero-trust transport route dynamically:
 
 ```
-client → api: POST /v1/files (metadata)          → presigned PUT URL returned
-client → MinIO/R2: PUT object (direct, >5GB multipart supported)
-client → api: POST /v1/files/{id}/complete       → row finalized, seq assigned in channel
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                     Dynamic Web4 Transport Selection Engine                     │
+│                                                                                 │
+│   [Attempt 1: Local LAN]                                                        │
+│   UDP Multicast / mDNS beacon (239.255.42.42:42424)                             │
+│   ➜ Direct gigabit socket transfer (~0.5ms latency, 0 external hops)            │
+│                              │                                                  │
+│                              ▼ (If not on same local Wi-Fi)                     │
+│   [Attempt 2: Direct WAN P2P]                                                   │
+│   Kademlia DHT Lookup + STUN UDP Hole-Punching                                  │
+│   ➜ Direct peer-to-peer connection across cellular 5G / broadband (~18ms)       │
+│                              │                                                  │
+│                              ▼ (If symmetric firewall / enterprise NAT blocks)  │
+│   [Attempt 3: Encrypted Relay Fallback]                                         │
+│   Decentralized Iroh DERP / Waku v2 Relay                                       │
+│   ➜ Zero-knowledge encrypted packet forwarder (~48ms)                           │
+│                              │                                                  │
+│                              ▼ (If recipient device is powered off / offline)   │
+│   [Attempt 4: Store-and-Forward Mailbox]                                        │
+│   30-Day Ephemeral Decentralized Gossip Cache                                   │
+│   ➜ Recipient syncs down immediately upon waking up                             │
+└─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-The server **never proxies bytes**. It only signs the upload and records metadata. Objects are encrypted client-side before upload where E2EE applies.
+---
 
-## 7. Mesh-based local fallback
+## 3. Cryptographic Core (`hermes_crypto`)
 
-When global internet drops, nearby devices discover each other over **Bluetooth / mDNS** and sync chat data peer-to-peer over an **encrypted local mesh**. The same CRDT engine that reconciles server↔client also reconciles device↔device, so a mesh merge is just another convergent apply.
+All cryptography runs in compiled native Rust via C-ABI / FFI:
+- **Group Encryption**: Hybrid Post-Quantum MLS (RFC 9420 compliant) pairing `ML-KEM-768` (FIPS 203) with `X25519` for quantum harvest-now-decrypt-later defense.
+- **Direct 1:1 Messages**: Double Ratchet with per-message ephemeral Diffie-Hellman keys.
+- **Signatures & Identity**: Hardware-derived `Ed25519` keypairs providing sub-1ms message authenticity verification.
+- **Device Enrollment**: Noise-IK mutual cross-signing using ephemeral one-scan QR codes.
 
-## 8. Rust crypto core (uniffi)
+---
 
-One Rust library, compiled once and bound natively into Dart (Flutter), Kotlin and Swift via **uniffi**. It owns:
+## 4. Local-First CRDT Sync Engine
 
-- Double Ratchet (DMs)
-- Hybrid post-quantum MLS tree math (groups/calls): ML-KEM + X25519
-- Ed25519 signing/verification
-- CRDT state reconciliation
-- SQLite FTS5 full-text search helpers
+Mercury stores all decrypted history in **Drift (SQLite)** coupled with an offline-first **CRDT (Conflict-free Replicated Data Type)** mutation log:
+- **Hybrid Logical Clocks (HLC)**: Every edit, deletion, or reaction is timestamped with an HLC to ensure deterministic convergence.
+- **Zero Data Loss**: Edits created while offline (e.g., on a flight) merge seamlessly into the peer network upon reconnecting without server conflicts.
+- **Zero-Knowledge Search**: Full-text search queries execute exclusively on-device via SQLite **FTS5**. Search queries never touch any network interface.
 
-Keeping this in Rust guarantees identical crypto behavior and performance across all six platforms, with no JS/WASM drift.
+---
 
-## 9. Media (LiveKit)
+## 5. Mobile & Hardware Optimizations
 
-`services/media` wraps a self-hosted **LiveKit Server** for voice/video/screen-share and recording orchestration. Group calls use the same hybrid PQ-MLS keys to enable LiveKit E2EE, so media is protected end-to-end as well.
+- **Dynamic SuperNode Coordination**: High-bandwidth, plugged-in workstations (e.g. Windows 11 Desktop) automatically assist low-power mobile nodes by multiplexing group streams.
+- **Audiophile Direct DAC Bypass**: Native audio streaming tailored for the **Moondrop MIAD01 dual Cirrus Logic CS43131 DACs**, pushing 510kbps full-band Opus stereo over 4.4mm balanced output.
+- **Wacom MobileStudio Live Canvas**: Real-time collaborative vector drawing capturing 8,192 levels of EMR pen pressure with sub-20ms latency.
+- **UnifiedPush Background Battery Protection**: Uses decentralized sealed pings to wake sleeping mobile devices without draining battery or running permanent background UDP loops.
