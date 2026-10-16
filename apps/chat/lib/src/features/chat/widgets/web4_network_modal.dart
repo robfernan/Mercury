@@ -291,6 +291,82 @@ class _Web4NetworkModalState extends ConsumerState<Web4NetworkModal> {
                       ],
                     ),
                   ),
+
+                  const SizedBox(height: 24),
+                  // Dynamic P2P SuperNode & DHT Rendezvous
+                  const Text(
+                    'P2P SUPERNODE & KADEMLIA DHT MESH',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.8,
+                      color: MercuryColors.textMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final superNode = ref.watch(superNodeCoordinatorProvider);
+                      final isSuperNode = superNode.role == P2PNodeRole.superNode;
+                      return Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: MercuryColors.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: MercuryColors.border),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  isSuperNode ? Icons.cloud_done_rounded : Icons.phone_android_rounded,
+                                  size: 18,
+                                  color: isSuperNode ? MercuryColors.accent : MercuryColors.textMuted,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  isSuperNode
+                                      ? 'Active P2P SuperNode (AC Powered)'
+                                      : 'Edge Client (Assisted by Desktop)',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13.5,
+                                    color: MercuryColors.textPrimary,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: MercuryColors.success.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Text(
+                                    'DHT MAPPED',
+                                    style: TextStyle(
+                                      color: MercuryColors.success,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            const Text(
+                              'Capable desktop nodes with unmetered broadband automatically assist low-power mobile nodes on cellular 5G by forwarding encrypted envelopes and multiplexing multi-party streams with zero cleartext access.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                height: 1.45,
+                                color: MercuryColors.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),

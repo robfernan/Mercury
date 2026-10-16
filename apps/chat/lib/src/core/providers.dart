@@ -18,6 +18,10 @@ import 'fleet/fleet_models.dart';
 import 'fleet/fleet_sync_service.dart';
 import 'audio/audiophile_audio_engine.dart';
 import 'canvas/wacom_canvas_service.dart';
+import 'p2p/supernode_coordinator.dart';
+import 'p2p/dht_peer_rendezvous.dart';
+import 'crdt/local_crdt_sync_engine.dart';
+import 'mobile/mobile_background_coordinator.dart';
 
 export 'p2p/local_lan_discovery.dart';
 export 'p2p/decentralized_mailbox.dart';
@@ -26,6 +30,10 @@ export 'fleet/fleet_models.dart';
 export 'fleet/fleet_sync_service.dart';
 export 'audio/audiophile_audio_engine.dart';
 export 'canvas/wacom_canvas_service.dart';
+export 'p2p/supernode_coordinator.dart';
+export 'p2p/dht_peer_rendezvous.dart';
+export 'crdt/local_crdt_sync_engine.dart';
+export 'mobile/mobile_background_coordinator.dart';
 
 /// The crypto boundary. Uses real native Rust engine if compiled dylib exists,
 /// falling back seamlessly to MockCryptoEngine in dev/headless modes.
@@ -140,5 +148,41 @@ final wacomCanvasServiceProvider = Provider<WacomCanvasService>((ref) {
   ref.onDispose(service.dispose);
   return service;
 });
+
+/// Dynamic P2P SuperNode coordinator electing AC-powered desktop nodes for group distribution
+final superNodeCoordinatorProvider = Provider<P2PSuperNodeCoordinator>((ref) {
+  final coordinator = P2PSuperNodeCoordinator(
+    localPeerId: SeedData.currentUserId,
+    isAcPowered: true,
+    hasHighBandwidthUplink: true,
+  );
+  ref.onDispose(coordinator.dispose);
+  return coordinator;
+});
+
+/// Cryptographic Distributed Hash Table (DHT) client for WAN & Cellular Rendezvous
+final dhtPeerRendezvousProvider = Provider<DhtPeerRendezvousService>((ref) {
+  final dht = DhtPeerRendezvousService(
+    localDid: 'did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK',
+  );
+  ref.onDispose(dht.dispose);
+  return dht;
+});
+
+/// Local-first CRDT synchronization engine over Drift/SQLite
+final localCrdtSyncEngineProvider = Provider<LocalCrdtSyncEngine>((ref) {
+  final crdt = LocalCrdtSyncEngine(localPeerId: SeedData.currentUserId);
+  ref.onDispose(crdt.dispose);
+  return crdt;
+});
+
+/// Mobile power profile & UnifiedPush wake-up coordinator (Android Doze & MIAD01 WakeLock)
+final mobileBackgroundCoordinatorProvider = Provider<MobileBackgroundCoordinator>((ref) {
+  final coordinator = MobileBackgroundCoordinator(devicePeerId: SeedData.currentUserId);
+  ref.onDispose(coordinator.dispose);
+  return coordinator;
+});
+
+
 
 

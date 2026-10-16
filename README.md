@@ -16,70 +16,71 @@ Mercury is designed to outperform Discord, Stoat and Element in speed, security,
 
 | Property | Mercury approach |
 | --- | --- |
-| **Speed** | WebTransport over QUIC/UDP (no TCP head-of-line blocking), `<50ms` p99 client-to-client delivery, 60–120fps scroll. |
-| **Security** | Zero-trust: Double Ratchet DMs + hybrid post-quantum MLS groups (ML-KEM + X25519), Ed25519 message signatures verified locally in `<1ms`, hardware-bound passkeys, JWT `jti` denylists. |
-| **Reliability** | Local-first CRDT sync engine — zero data loss across devices, automatic offline→online merge, strict per-channel sequence numbers with gap-fill on reconnect. |
-| **Privacy** | Zero-knowledge client-side search (SQLite FTS5 over decrypted history). The server never indexes or learns your queries. |
+| **Speed** | Direct P2P over QUIC/UDP (LAN ~0.5ms, WAN STUN ~18ms), `<50ms` delivery, 60–120fps scroll. |
+| **Security** | Zero-trust: Double Ratchet DMs + hybrid post-quantum MLS groups (ML-KEM-768 + X25519), Ed25519 signatures, hardware enclave keys (TPM 2.0 / StrongBox). |
+| **Zero-VPS / Serverless** | No Docker, no Kubernetes, no paid cloud VPS. Operates directly via Local Wi-Fi mDNS, STUN/DERP P2P hole-punching, and decentralized Waku relays. |
+| **Reliability** | Local-first Drift SQLite + CRDT sync engine — zero data loss across devices, automatic offline→online merge, 30-day decentralized offline mailbox cache. |
+| **Privacy** | Zero-knowledge client-side search (SQLite FTS5 over decrypted history). Queries never touch a network or server. |
 
 ---
 
 ## Tech stack (pinned)
 
-| Layer | Technology | Version / standard |
+| Layer | Technology | Specification / Standard |
 | --- | --- | --- |
 | Client (all platforms) | Flutter + Dart | 3.47.x / 3.13 |
 | Renderer (desktop/mobile) | Impeller (Metal / Vulkan) | default |
 | Renderer (web) | WebAssembly with WasmGC (`--wasm`) | stable / modern browsers |
 | State & UI | Riverpod | 3.4 |
-| Shared core & crypto engine | Rust via FFI (uniffi) | 2026 edition |
-| Video / audio / screen share | LiveKit (`livekit_client`) | latest |
-| Real-time gateway | Go — quic-go / WebTransport + Redis Pub/Sub | 1.25.x |
-| Local storage & offline cache | Drift (SQLite) + CRDT sync engine | latest |
-| Secure key storage | OS Keychain / Keystore (Secure Enclave / StrongBox / TPM 2.0) | latest |
-| E2EE crypto | Double Ratchet (DMs) + hybrid post-quantum MLS (groups) + Ed25519 | via Rust core & libsodium bindings |
+| Shared core & crypto engine | Rust via FFI (`hermes_crypto`) | 2026 edition |
+| P2P Transport & Discovery | Iroh P2P + UDP Multicast (mDNS) + STUN/DERP | Web4 zero-trust P2P |
+| Decentralized Relay & Mailbox | Waku v2 Gossip Relay (30-day ephemeral TTL) | Zero-VPS relay standard |
+| Local storage & offline cache | Drift (SQLite FTS5) + CRDT sync engine | client-side encrypted |
+| Hardware key isolation | OS Keychain / Keystore (TPM 2.0 / StrongBox / libsecret) | hardware-bound |
+| E2EE crypto | Hybrid PQ-MLS (ML-KEM-768 + X25519) + Double Ratchet + Ed25519 | native Rust engine |
+| Multi-device fleet pairing | Noise-IK Mutual Cross-Signing (One-Scan QR) | zero-password fleet sync |
+| Audiophile Voice Engine | Full-Band Lossless Opus Stereo (510 kbps, 48kHz) | direct DAC bypass (MIAD01) |
+| Stylus Canvas Engine | Collaborative Vector Stream with 8192-level EMR pressure | Wacom Pro Pen 2 sub-20ms |
 | Navigation | `go_router` | latest |
-| HTTP client | `dio` with interceptors (auth, retry, logging) | latest |
-| Push notifications | FCM / OneSignal via encrypted proxy | latest |
-| Backend REST API | Go — chi + sqlc + pgx | 1.25.x |
-| Media SFU | LiveKit Server (self-hosted, Go) | latest OSS |
-| Database | PostgreSQL | 17.x |
-| Cache / pub-sub / presence | Redis | 8.x |
-| File storage | MinIO (S3-compatible) or Cloudflare R2 | latest |
 | Monorepo | Turborepo + pnpm 10 | latest |
-| Linting | `dart analyze`, `golangci-lint`, `clippy` | latest |
-| Testing | `flutter_test`, `integration_test`, `go test` | — |
-| CI/CD & containers | GitHub Actions + Docker Compose / Kubernetes | 27.x |
-| Identity & auth | W3C DIDs (`did:key`) + Passkeys (WebAuthn) | — |
-| Password hashing | Argon2id (`golang.org/x/crypto/argon2`) | — |
-| JWT signing | RS256 (asymmetric) via `golang-jwt` | latest |
+| Testing | `flutter_test`, `integration_test`, `cargo test` | — |
 
 ---
 
 ## Architecture at a glance
 
 ```
-                        ┌──────────────────────────────┐
-   Flutter client       │        Mercury gateway         │
-  (iOS/Android/Web/     │  WebTransport over QUIC/UDP   │
-   Windows/macOS/Linux) │  per-channel seq + gap-fill   │
-        │               └───────────────▲──────────────┘
-        │ REST / presigned PUT          │ Redis Pub/Sub fanout
-        ▼                               │ server:{id}:channel:{id}
-   ┌──────────────┐    write     ┌──────┴───────┐
-   │  Mercury API  │────────────▶│   PostgreSQL │
-   │ chi+sqlc+pgx │             │      17.x    │
-   └──────┬───────┘             └──────────────┘
-          │ presigned PUT (server never proxies bytes)
-          ▼
-     MinIO / R2 (S3, >5GB multipart)
-
-   Rust crypto core (uniffi → Dart/Kotlin/Swift):
-     Double Ratchet · hybrid PQ-MLS (ML-KEM+X25519) · Ed25519 · CRDT reconcile · FTS5 search
+                               ┌──────────────────────────────────────────────┐
+  Personal Device Fleet        │      Decentralized Relay & Mailbox Mesh      │      Connected Friends
+  - Windows 11 Desktop (Hub)   │      (Waku v2 Gossip / Iroh DERP / DHT)      │      - Windows / Linux
+  - Wacom MobileStudio Pro 13  │      - Zero server hosting bills (No VPS)    │      - Android / MIAD01
+  - HP Debian Laptop           │      - End-to-end encrypted packet forwarding │      - 30-Day Offline Cache
+  - Moondrop MIAD01 5G Phone   │      - Complete IP & identity blinding       │      - Direct P2P Streams
+                               └──────────────────────▲───────────────────────┘
+                                                      │ Encrypted Gossip Mailbox
+                                                      ▼
+ ┌─────────────────────────────────────────────────────────────────────────────────────────────────────┐
+ │                                   MERCURY CLIENT NODE ARCHITECTURE                                  │
+ │                                                                                                     │
+ │  ┌─────────────────────────┐   ┌───────────────────────────┐   ┌────────────────────────────────┐  │
+ │  │   Flutter UI Layer      │   │     Rust Native Core      │   │   Local Encrypted Storage      │  │
+ │  │ - Liquid Glass Theming  │──▶│ - ML-KEM-768 + X25519     │──▶│ - SQLite FTS5 Search Index     │  │
+ │  │ - Wacom EMR Vector Draw │   │ - Noise-IK Cross-Signing  │   │ - Drift CRDT History Store     │  │
+ │  │ - Audiophile 510k Voice │   │ - Ed25519 Signatures      │   │ - TPM 2.0 / StrongBox Enclave  │  │
+ │  └─────────────────────────┘   └───────────────────────────┘   └────────────────────────────────┘  │
+ │                                              │                                                      │
+ │                                              ▼                                                      │
+ │  ┌───────────────────────────────────────────────────────────────────────────────────────────────┐  │
+ │  │                       Zero-VPS Dynamic Web4 Transport Router                                  │  │
+ │  │  Tier 1: Local Wi-Fi Direct (mDNS / 0.5ms)                                                    │  │
+ │  │  Tier 2: STUN / UDP Hole-Punched Direct P2P (Cellular 5G / WAN / 18ms)                        │  │
+ │  │  Tier 3: Encrypted DERP / Waku Relay Fallback (Symmetric NAT / 48ms)                          │  │
+ │  │  Tier 4: Decentralized Offline Mailbox (Recipient unreachable / Cached)                      │  │
+ │  └───────────────────────────────────────────────────────────────────────────────────────────────┘  │
+ └─────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Two Go services, one Postgres.** `api` owns REST logic, auth and file presigning; `gateway` owns real-time WebTransport streams. They share PostgreSQL via independent connection pools and scale independently. A message posted → API writes to Postgres → publishes to a Redis channel → all gateway instances push to connected WebTransport clients (target `<50ms`).
-
-**Local-first.** Drift/SQLite stores decrypted history with embedded CRDT state, achieving zero data loss across multi-device setups and automatic offline→online merges. Search runs locally via FTS5 — the server never sees your queries.
+**Zero server bills. 100% private.** There are no centralized Go or PostgreSQL servers to deploy or pay for. Every client device acts as an autonomous cryptographic node. Messages, settings, and FTS5 search indices reside exclusively on your physical devices.
 
 ---
 
@@ -88,21 +89,11 @@ Mercury is designed to outperform Discord, Stoat and Element in speed, security,
 ```
 .
 ├── apps/
-│   └── chat/                    # Flutter app (one codebase → all platforms)
+│   └── chat/                    # Flutter app (one native codebase → all platforms)
 ├── core/
-│   └── crypto-engine/           # Rust core: Double Ratchet, MLS, CRDTs, FTS5 search, uniffi bindings
-├── services/
-│   ├── api/                     # Go: REST API (chi + sqlc + pgx)
-│   ├── gateway/                 # Go: WebTransport / QUIC real-time server
-│   └── media/                   # Go: LiveKit wrapper + recording orchestration
-├── packages/
-│   └── shared-schema/           # OpenAPI specs and shared schemas
-├── infra/
-│   ├── docker-compose.yml       # Local dev stack
-│   ├── k8s/                     # Production Kubernetes manifests
-│   └── terraform/               # IaC templates
-├── tooling/                     # CI workflows and scripts
-└── docs/                        # Architecture and self-hosting documentation
+│   └── crypto-engine/           # Rust core: ML-KEM, X25519, Noise-IK, Ed25519, uniffi C-ABI
+├── docs/                        # Architecture and security documentation
+└── tooling/                     # CI workflows and scripts
 ```
 
 ---
@@ -113,49 +104,27 @@ Mercury is designed to outperform Discord, Stoat and Element in speed, security,
 
 - **Flutter 3.47.x** (Dart 3.13) with Impeller enabled
 - **Rust stable** (1.80+) + `cargo`
-- **Go 1.25.x**, **Node 20+**, **pnpm 10**
-- **Docker** (for local Postgres / Redis / MinIO stack)
 - **Windows development** (if running desktop Windows build):
   - Visual Studio 2022+ with **"Desktop development with C++"** workload installed
-  - **Developer Mode** enabled in Windows Settings (`start ms-settings:developers`) for symlink support
+  - **Developer Mode** enabled in Windows Settings for symlink support
 
-### 1. Bring up infrastructure
-
-```bash
-pnpm infra:up          # postgres:17 + redis:8 + minio via docker compose
-```
-
-### 2. Build the Rust crypto core & generate bindings
+### 1. Build the Rust crypto core
 
 ```bash
 cd core/crypto-engine
 cargo build --release
-# On Windows, copy target/release/hermes_crypto.dll to apps/chat/windows/
-# On macOS/Linux, build libhermes_crypto.dylib or libhermes_crypto.so
 ```
 
-### 3. Run the Go services
+### 2. Run the Flutter app (Zero Server Required!)
 
 ```bash
-pnpm dev:api           # REST API on :8080
-pnpm dev:gateway       # WebTransport gateway on :443 (UDP) / :8081 (HTTP fallback)
-```
-
-### 4. Run the Flutter app
-
-```bash
-# Note: Ensure you run flutter commands from the Flutter app directory
 cd apps/chat
 flutter pub get
 
-# Run on desktop (Windows / macOS / Linux)
+# Run on your desktop (Windows / Linux / macOS)
 flutter run -d windows
-flutter run -d macos
 flutter run -d linux
-
-# Run on Web (WASM / CanvasKit)
-flutter run -d chrome
-flutter build web --wasm
+flutter run -d macos
 ```
 
 ---
