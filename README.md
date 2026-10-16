@@ -4,7 +4,8 @@
 
 Mercury is designed to outperform Discord, Stoat and Element in speed, security, reliability and user experience — built on a local-first, end-to-end-encrypted core with post-quantum group messaging.
 
-> Status: **Web4 master spec scaffold** (October 10, 2026). This repository is the production monorepo layout; each service ships with working entrypoints, pinned dependencies and tests.
+> Status: **Web4 Master Spec & Frontend Shell (Active Development)**  
+> ⚠️ **Project Status & Disclaimer**: The frontend UI shell is fully functional and interactive across desktop and mobile — you can navigate channels, draw collaboratively on the Wacom vector canvas with stylus pressure, customize themes and wallpapers, inspect hardware enclaves, and join audio rooms. However, **server/guild creation, inviting/adding new real users, and automated cross-platform state persistence/sync are currently in active development** and not yet wired end-to-end between separate physical devices.
 
 <p align="center">
   <img src="screenshot.png" alt="Mercury Client Shell" width="950" />
@@ -247,6 +248,34 @@ Mercury is transitioning from a traditional client-server layout to a **zero-cos
   - Zero-trust sandboxed community micro-apps, markdown extensions, soundboards, and mathematical formula renderers running client-side.
 - [ ] **WebRTC SFU-Free Spatial Video & P2P Stream Channels**:
   - Decentralized multi-peer mesh video calling with dynamic simulcast and AV1 encoding, eliminating video server hosting costs.
+
+---
+
+## Current Development Focus & Next Resumption Steps
+
+> **Status Check (2:43 PM EST 10.16.2026 Test Run)**:  
+> Testing the client concurrently on **Windows Desktop (`.exe`)** and **Moondrop MIAD01 (Android)** verified that the UI shell, local vector canvas, audiophile engine, and theme subsystems render smoothly across mobile and desktop. However, **real-time message sync across separate physical devices did not occur**.  
+>  
+> Below is the root-cause diagnosis and the concrete plan of action for when development resumes:
+
+### 1. Root Cause Analysis: Why Real Hardware Sync Paused
+- **Identical Node Identity (`user_me`)**: Both desktop and mobile currently initialize with static seed identities (`user_me`). When one device broadcasts an action, the other treats it as a self-originated echo rather than an external peer message.
+- **Wi-Fi Router AP Isolation & Broadcast Drops**: Most consumer Wi-Fi routers automatically drop UDP subnet broadcasts (`255.255.255.255`) and multicast packets (`239.255.42.42`) between Wi-Fi clients to prevent airtime congestion, stopping zero-config auto-discovery.
+- **Windows Defender Inbound Filtering**: Windows 11 blocks unsolicited incoming UDP connections on arbitrary ports unless an inbound firewall rule is explicitly granted.
+- **Static Seeds vs. Dynamic Drift SQLite**: Channels, guilds, and users are currently bound to static in-memory seed models rather than a fully reactive SQLite database schema with live CRDT mutation handlers.
+
+### 2. Immediate Next Steps (Priority Checklist for Resumption)
+- [ ] **Step 1: Unique Dynamic Device Identity Generator**
+  - Implement dynamic local identity generation on first app launch (`DeviceID`, Ed25519 node keypair, human-readable node name: e.g., *"Windows Desktop Node"* vs. *"Moondrop MIAD01"*).
+  - Store identity securely in OS secure storage (`flutter_secure_storage` / TPM / StrongBox).
+- [ ] **Step 2: Direct LAN IP & QR Unicast Pairing (Bypassing Router AP Isolation)**
+  - Add a manual **"Direct LAN Connect"** / **"Scan Peer QR"** option in the Fleet Sync modal.
+  - Establish a persistent, direct TCP/QUIC socket between the phone's LAN IP (e.g. `192.168.1.50`) and the PC's LAN IP (`192.168.1.20`) to guarantee message delivery regardless of router broadcast filtering.
+- [ ] **Step 3: Dynamic Guild / Channel / User Creation UI**
+  - Replace static seed models with reactive Drift SQLite tables.
+  - Build interactive `+ Create Server` and `+ Create Channel` dialogs so nodes can create and synchronize real rooms.
+- [ ] **Step 4: End-to-End CRDT Message Sync Verification**
+  - Hook incoming socket frames directly into `LocalCrdtSyncEngine` and verify two-way message delivery between Windows 11 and Moondrop MIAD01 in real time.
 
 ---
 
