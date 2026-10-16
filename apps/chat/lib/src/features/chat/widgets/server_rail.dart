@@ -114,30 +114,26 @@ class _ServerIconState extends ConsumerState<_ServerIcon> {
         ? 8.0
         : 0.0;
 
-    return Semantics(
-      button: true,
-      selected: widget.active,
-      label: unread > 0 ? '${server.name}, $unread unread' : server.name,
-      child: SizedBox(
-        height: 48,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Positioned(
-              left: 0,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOutCubic,
-                width: 4,
-                height: pillHeight,
-                decoration: const BoxDecoration(
-                  color: MercuryColors.textPrimary,
-                  borderRadius: BorderRadius.horizontal(
-                    right: Radius.circular(4),
-                  ),
+    return SizedBox(
+      height: 48,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned(
+            left: 0,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutCubic,
+              width: 4,
+              height: pillHeight,
+              decoration: const BoxDecoration(
+                color: MercuryColors.textPrimary,
+                borderRadius: BorderRadius.horizontal(
+                  right: Radius.circular(4),
                 ),
               ),
             ),
+          ),
             Tooltip(
               message: server.name,
               preferBelow: false,
@@ -183,8 +179,7 @@ class _ServerIconState extends ConsumerState<_ServerIcon> {
               ),
           ],
         ),
-      ),
-    );
+      );
   }
 }
 

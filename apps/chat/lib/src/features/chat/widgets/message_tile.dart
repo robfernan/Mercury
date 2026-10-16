@@ -527,13 +527,9 @@ class _ReactionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      toggled: mine,
-      label: '$emoji reaction, $count',
-      child: Material(
-        color: mine ? MercuryColors.accentSoft : MercuryColors.surfaceRaised,
-        shape: RoundedRectangleBorder(
+    return Material(
+      color: mine ? MercuryColors.accentSoft : MercuryColors.surfaceRaised,
+      shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
           side: BorderSide(
             color: mine ? MercuryColors.accent : MercuryColors.border,
@@ -563,8 +559,7 @@ class _ReactionChip extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 }
 

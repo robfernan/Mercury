@@ -198,14 +198,9 @@ class _TextChannelTile extends ConsumerWidget {
             Scaffold.maybeOf(context)?.closeDrawer();
             context.go(Routes.channel(channel.serverId, channel.id));
           },
-          child: Semantics(
-            selected: active,
-            label: hasUnread
-                ? '${channel.name}, $unread unread'
-                : 'Channel ${channel.name}',
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
-              child: Row(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+            child: Row(
                 children: [
                   Icon(Icons.tag_rounded, size: 18, color: color),
                   const SizedBox(width: 6),
@@ -246,8 +241,7 @@ class _TextChannelTile extends ConsumerWidget {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 }
 

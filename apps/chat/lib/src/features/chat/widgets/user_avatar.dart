@@ -61,37 +61,30 @@ class UserAvatar extends StatelessWidget {
       ),
     );
 
-    final semanticLabel = showPresence
-        ? '${user.displayName}, ${presenceLabel(user.presence)}'
-        : user.displayName;
-
-    if (!showPresence) return Semantics(label: semanticLabel, child: avatar);
+    if (!showPresence) return avatar;
 
     final dot = size * 0.32;
-    return Semantics(
-      label: semanticLabel,
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            avatar,
-            Positioned(
-              right: -1,
-              bottom: -1,
-              child: Container(
-                width: dot,
-                height: dot,
-                decoration: BoxDecoration(
-                  color: presenceColor(user.presence),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: badgeBorderColor, width: dot * 0.22),
-                ),
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          avatar,
+          Positioned(
+            right: -1,
+            bottom: -1,
+            child: Container(
+              width: dot,
+              height: dot,
+              decoration: BoxDecoration(
+                color: presenceColor(user.presence),
+                shape: BoxShape.circle,
+                border: Border.all(color: badgeBorderColor, width: dot * 0.22),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
